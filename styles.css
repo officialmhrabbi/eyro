@@ -751,8 +751,8 @@ html:not(.js) .split > i { transform: none; }
 main > section:not(.hero),
 .site-footer {
   opacity: 0;
-  transform: translateY(52px) scale(.985);
-  transition: opacity .7s var(--ease), transform .85s var(--ease);
+  transform: translateY(72px) scale(.995);
+  transition: opacity .65s var(--ease), transform .9s var(--ease);
 }
 main > section.in-view,
 .site-footer.in-view { opacity: 1; transform: none; }

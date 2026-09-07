@@ -161,10 +161,10 @@
     <section class="hero" aria-labelledby="hero-title">
       <!-- Frame shape is held in radios so the switcher works with no JS at
            all. CSS drives the SVG frame; script.js mirrors it into WebGL. -->
-      <input class="fs-input" type="radio" name="fshape" id="fs-sun" checked>
-      <input class="fs-input" type="radio" name="fshape" id="fs-aviator">
-      <input class="fs-input" type="radio" name="fshape" id="fs-round">
+      <input class="fs-input" type="radio" name="fshape" id="fs-aviator" checked>
       <input class="fs-input" type="radio" name="fshape" id="fs-titanium">
+      <input class="fs-input" type="radio" name="fshape" id="fs-sun">
+      <input class="fs-input" type="radio" name="fshape" id="fs-round">
 
       <div class="hero-stage" id="hero-stage" aria-hidden="true">
         <canvas id="scene"></canvas>
@@ -231,10 +231,10 @@
         <div class="frame-switch">
           <p class="fs-caption" aria-live="polite"></p>
           <div class="fs-row" role="group" aria-label="Preview frame shape">
-            <label class="fs" for="fs-sun"     >Sunglasses</label>
             <label class="fs" for="fs-aviator" >Aviator</label>
-            <label class="fs" for="fs-round"    >Round</label>
             <label class="fs" for="fs-titanium">Titanium</label>
+            <label class="fs" for="fs-sun"     >Sunglasses</label>
+            <label class="fs" for="fs-round"   >Round</label>
           </div>
         </div>
       </div>

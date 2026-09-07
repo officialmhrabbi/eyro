@@ -261,7 +261,6 @@ function initSectionReveal() {
   });
   addEventListener('load', near);
   setTimeout(near, 800);
-  setTimeout(() => secs.forEach(play), 5000);
 }
 
 /* ---------- magnetic buttons ---------- */
@@ -768,8 +767,8 @@ async function initHero() {
   const rivetGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.05, 14);
   const hingeGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.2, 18);
 
-  function buildGlasses(kind = 'sun') {
-    const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.sun)();
+  function buildGlasses(kind = 'aviator') {
+    const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.aviator)();
     const g = new THREE.Group();
     const cx = halfW + 0.16;          // rim centre: half the bridge span out
     const endX = cx + halfW;          // outer edge of the front
@@ -865,7 +864,7 @@ async function initHero() {
   }
 
   const pivot = new THREE.Group();       // holds whichever frame is on show
-  let glasses = buildGlasses('sun');
+  let glasses = buildGlasses('aviator');
   pivot.add(glasses);
   const dust = buildDust();
   scene.add(pivot, dust);
@@ -888,10 +887,10 @@ async function initHero() {
      the model's own materials away for the acetate/glass above - usually worth
      trying, since marketplace models tend to ship with flat plastic shading. */
   const MODELS = {
-    sun:      { url: 'models/stylish_modern_high_quality_sunglasses.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'ours' },
-    aviator:  { url: 'models/aviator_glasses.glb',                        rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
-    round:    { url: 'models/eyewear_specs.glb',                          rotation: [0, Math.PI / 2, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
-    titanium: { url: 'models/titanium_frame_glass.glb',                   rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    aviator:  { url: 'models/aviator_glasses.opt.glb',                        rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'model' },
+    titanium: { url: 'models/titanium_frame_glass.opt.glb',                   rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'model' },
+    sun:      { url: 'models/stylish_modern_high_quality_sunglasses.opt.glb', rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'ours' },
+    round:    { url: 'models/eyewear_specs.opt.glb',                          rotation: [0, Math.PI / 2, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
   };
   const FRONT_SPAN = 4.3;   // the procedural front is about this wide, so a
                             // model auto-scaled to match drops straight in
@@ -970,7 +969,7 @@ async function initHero() {
 
   /* ---- frame switcher: the built frame holds the spot until a model lands ---- */
   let swapT = 1;          // 0..1, drives the scale punch on swap
-  let current = 'sun';
+  let current = 'aviator';
   let swapId = 0;
 
   function disposeGroup(group) {
@@ -1006,7 +1005,7 @@ async function initHero() {
 
   /* The radios are the single source of truth: CSS styles the chips, swaps the
      SVG frame and writes the caption; here we mirror the choice into WebGL. */
-  const RADIO_SHAPE = { 'fs-sun': 'sun', 'fs-aviator': 'aviator', 'fs-round': 'round', 'fs-titanium': 'titanium' };
+  const RADIO_SHAPE = { 'fs-aviator': 'aviator', 'fs-titanium': 'titanium', 'fs-sun': 'sun', 'fs-round': 'round' };
   $$('.fs-input').forEach((r) => r.addEventListener('change', () => {
     if (r.checked) setShape(RADIO_SHAPE[r.id]);
   }));
