@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- EYRO brand mark: a single lens pill with a temple-arm stub, lifted
+       straight from the header's .brand-mark (22x12 pill + a 6px arm 9px
+       to its left). Dark tile so it reads in a light or dark browser tab. -->
+  <rect width="64" height="64" rx="13" fill="#0a0a0a"/>
+  <g fill="none" stroke="#f4f4f2" stroke-width="6" stroke-linecap="round">
+    <rect x="22" y="22" width="30" height="20" rx="10"/>
+    <line x1="11" y1="32" x2="21" y2="32"/>
+  </g>
+</svg>
