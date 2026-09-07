@@ -1,9 +1,3 @@
-/* Tiny static server so the page runs over http:// (ES modules and the
-   Three.js CDN import do not work from a file:// path).
-
-   Run:   node serve.mjs
-   Then:  open http://localhost:5173
-*/
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';

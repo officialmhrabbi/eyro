@@ -1,14 +1,9 @@
-// Rasterises the EYRO brand mark (see favicon.svg / .brand-mark in styles.css)
-// into favicon.ico + PNG fallbacks. No dependencies - zlib from node core does
-// the PNG compression, the .ico is an uncompressed 32bpp DIB. Re-run by hand
-// after the mark changes:  node gen-favicon.mjs
 import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
 
-const INK = [0x0a, 0x0a, 0x0a];   // --dark  : tile
-const PAPER = [0xf4, 0xf4, 0xf2]; // --paper : the mark
+const INK = [0x0a, 0x0a, 0x0a];
+const PAPER = [0xf4, 0xf4, 0xf2];
 
-// --- geometry in a 64x64 design box, matched to favicon.svg -------------------
 const TILE_R = 13;
 const PILL = { cx: 37, cy: 32, hw: 15, hh: 10, r: 10, stroke: 6 };
 const ARM = { ax: 11, ay: 32, bx: 22, by: 32, r: 3 };
@@ -25,10 +20,9 @@ const sdSegment = (px, py, ax, ay, bx, by) => {
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
 };
 
-// straight-alpha RGBA buffer, top-down, for one square size
 function render(size) {
-  const s = size / 64;             // design units -> pixels
-  const SS = 4;                    // supersample grid
+  const s = size / 64;
+  const SS = 4;
   const buf = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -45,8 +39,8 @@ function render(size) {
       }
       const n = SS * SS;
       const ta = tile / n, ma = mark / n;
-      // paper mark over ink tile, then flatten to straight alpha on transparent
-      const a = ta;                       // tile shape owns the silhouette
+
+      const a = ta;
       const r = INK[0] * (1 - ma) + PAPER[0] * ma;
       const g = INK[1] * (1 - ma) + PAPER[1] * ma;
       const b = INK[2] * (1 - ma) + PAPER[2] * ma;
@@ -57,7 +51,6 @@ function render(size) {
   return buf;
 }
 
-// --- PNG ---------------------------------------------------------------------
 const CRC = (() => {
   const t = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -82,12 +75,12 @@ function png(size) {
   const stride = size * 4;
   const raw = Buffer.alloc((stride + 1) * size);
   for (let y = 0; y < size; y++) {
-    raw[y * (stride + 1)] = 0;                                   // filter: none
+    raw[y * (stride + 1)] = 0;
     rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
   }
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; ihdr[9] = 6;                                      // 8-bit RGBA
+  ihdr[8] = 8; ihdr[9] = 6;
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     chunk('IHDR', ihdr),
@@ -96,28 +89,27 @@ function png(size) {
   ]);
 }
 
-// --- ICO (uncompressed 32bpp BITMAPINFOHEADER images) -----------------------
 function icoImage(size) {
   const rgba = render(size);
   const header = Buffer.alloc(40);
   header.writeUInt32LE(40, 0);
   header.writeInt32LE(size, 4);
-  header.writeInt32LE(size * 2, 8);          // XOR + AND masks stacked
+  header.writeInt32LE(size * 2, 8);
   header.writeUInt16LE(1, 12);
   header.writeUInt16LE(32, 14);
   const xor = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const src = ((size - 1 - y) * size + x) * 4;               // bottom-up
+      const src = ((size - 1 - y) * size + x) * 4;
       const dst = (y * size + x) * 4;
-      xor[dst] = rgba[src + 2];                                  // B
-      xor[dst + 1] = rgba[src + 1];                              // G
-      xor[dst + 2] = rgba[src];                                  // R
-      xor[dst + 3] = rgba[src + 3];                              // A
+      xor[dst] = rgba[src + 2];
+      xor[dst + 1] = rgba[src + 1];
+      xor[dst + 2] = rgba[src];
+      xor[dst + 3] = rgba[src + 3];
     }
   }
   const andRow = (Math.ceil(size / 8) + 3) & ~3;
-  const and = Buffer.alloc(andRow * size);                       // all opaque
+  const and = Buffer.alloc(andRow * size);
   return Buffer.concat([header, xor, and]);
 }
 function ico(sizes) {

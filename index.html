@@ -7,16 +7,10 @@
   <meta name="theme-color" content="#0a0a0a" />
   <title>EYRO Eyewear, New York</title>
 
-  <!-- Favicons, generated from the header brand mark by gen-favicon.mjs.
-       .ico for legacy tabs, .svg for modern browsers, PNG for iOS home screen. -->
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
-  <!-- Arm the intro/curtain only when this page is served over http(s).
-       Opened as a file:// path the ES module below is blocked by the browser,
-       so we skip the curtain, render the page static, and flag it so the
-       notice at the end of <body> can explain why the 3D is missing. -->
   <script>
     document.documentElement.className +=
       location.protocol === 'file:' ? ' is-file' : ' js';
@@ -28,7 +22,6 @@
 
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Three.js + addons from the jsdelivr CDN via import map. No build step. -->
   <script type="importmap">
   {
     "imports": {
@@ -39,7 +32,7 @@
   </script>
 </head>
 <body>
-  <!-- ===== Entry curtain ===== -->
+
   <div class="loader" aria-hidden="true">
     <div class="loader-inner">
       <span class="loader-brand">EYRO</span>
@@ -49,8 +42,6 @@
 
   <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
 
-  <!-- Frame outlines, referenced by <use> in the hero. `.hl` paths are the
-       specular highlights and are hidden on the silhouette layer. -->
   <svg class="svg-sprite" aria-hidden="true" width="0" height="0"><defs>
     <g id="sh-round" fill="none" stroke="currentColor" stroke-width="19">
       <circle cx="146" cy="104" r="76"/>
@@ -121,7 +112,6 @@
     </g>
   </defs></svg>
 
-  <!-- ===== Announcement ===== -->
   <div class="announce">
     <div class="container announce-row">
       <p>Prescription lenses included with every frame this month.</p>
@@ -129,7 +119,6 @@
     </div>
   </div>
 
-  <!-- ===== Header ===== -->
   <header class="site-header" id="top">
     <div class="container nav">
       <a class="brand" href="#top">
@@ -163,10 +152,9 @@
   </header>
 
   <main>
-    <!-- ===== HERO ===== -->
+
     <section class="hero" aria-labelledby="hero-title">
-      <!-- Frame shape is held in radios so the switcher works with no JS at
-           all. CSS drives the SVG frame; script.js mirrors it into WebGL. -->
+
       <input class="fs-input" type="radio" name="fshape" id="fs-aviator" checked>
       <input class="fs-input" type="radio" name="fshape" id="fs-titanium">
       <input class="fs-input" type="radio" name="fshape" id="fs-sun">
@@ -175,9 +163,6 @@
       <div class="hero-stage" id="hero-stage" aria-hidden="true">
         <canvas id="scene"></canvas>
 
-        <!-- CSS 3D frame. Real depth: the face and the silhouette sit on
-             different Z planes and the temples swing back into the scene,
-             so rotation gives genuine parallax. Runs without any script. -->
         <div class="eyeframe">
           <div class="ef-rig">
             <div class="ef-body">
@@ -246,7 +231,6 @@
       </div>
     </section>
 
-    <!-- ===== Category marquee ===== -->
     <section class="marquee" aria-label="Categories">
       <div class="marquee-track">
         <div class="marquee-group" aria-hidden="false">
@@ -262,7 +246,6 @@
       </div>
     </section>
 
-    <!-- ===== Promo band ===== -->
     <section class="promo" aria-labelledby="promo-title">
       <div class="container promo-inner">
         <p class="eyebrow" data-reveal="fade">This month at EYRO</p>
@@ -284,7 +267,6 @@
       </div>
     </section>
 
-    <!-- ===== Shop by category ===== -->
     <section class="section category" id="category" aria-labelledby="category-title">
       <div class="container">
         <div class="section-head">
@@ -300,7 +282,6 @@
               </div>
               <div class="cat-body">
                 <h3>Optical frames</h3><p>24 styles</p>
-                <a class="btn btn-line btn-sm" href="#trending">Shop now</a>
               </div>
             </article>
             <article class="cat-slide cat-card">
@@ -362,7 +343,6 @@
       </div>
     </section>
 
-    <!-- ===== Trending ===== -->
     <section class="section trending" id="trending" aria-labelledby="trending-title">
       <div class="container">
         <div class="section-head">
@@ -377,7 +357,6 @@
       </div>
     </section>
 
-    <!-- ===== Statement ===== -->
     <section class="section statement" aria-label="Statement">
       <div class="container">
         <p class="statement-text" id="statement">
@@ -387,7 +366,6 @@
       </div>
     </section>
 
-    <!-- ===== Product showcase ===== -->
     <section class="section showcase" id="showcase" aria-labelledby="showcase-title">
       <div class="container showcase-inner">
         <div class="showcase-media" data-reveal="clip">
@@ -414,7 +392,6 @@
       </div>
     </section>
 
-    <!-- ===== Best sellers ===== -->
     <section class="section bestseller" id="bestseller" aria-labelledby="bestseller-title">
       <div class="container">
         <div class="section-head">
@@ -425,7 +402,6 @@
       </div>
     </section>
 
-    <!-- ===== Category cards / offers ===== -->
     <section class="section offers" id="stores" aria-label="Store offers">
       <div class="container">
         <h2 class="section-title" data-reveal="split">On sale this month</h2>
@@ -440,7 +416,6 @@
     </section>
   </main>
 
-  <!-- ===== Footer ===== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-top">
@@ -466,8 +441,6 @@
     </div>
   </footer>
 
-  <!-- Shown only when the page is opened from disk, where the browser refuses
-       to load the ES module below (so there is no 3D and no motion). -->
   <aside class="file-note" role="note">
     <p>
       <strong>Opened from a file, so you are seeing the CSS build of the hero.</strong>

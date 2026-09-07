@@ -1,20 +1,16 @@
-/* ============================================================
-   EYRO Eyewear, New York - landing page
-   Tokens → reset → type → components → sections → motion → responsive
-   ============================================================ */
 :root {
-  --paper:      #f4f4f2;    /* near-white       */
+  --paper:      #f4f4f2;
   --paper-2:    #e8e8e6;
   --card:       #ffffff;
-  --ink:        #101010;    /* black           */
+  --ink:        #101010;
   --ink-2:      #3a3a3a;
   --muted:      #8a8a8a;
-  --hair:       #dcdcda;    /* hairline on paper */
-  --dark:       #0a0a0a;    /* hero / footer bg */
+  --hair:       #dcdcda;
+  --dark:       #0a0a0a;
   --dark-2:     #1c1c1c;
-  --accent:     #101010;    /* emphasis on light grounds  */
-  --accent-hi:  #f4f4f2;    /* emphasis on dark grounds   */
-  --sale:       #101010;    /* badge: black on white       */
+  --accent:     #101010;
+  --accent-hi:  #f4f4f2;
+  --sale:       #101010;
 
   --font:  "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Newsreader", Georgia, "Times New Roman", serif;
@@ -32,7 +28,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  /* anchor jumps from the nav land clear of the sticky header */
+
   scroll-padding-top: calc(var(--chrome-h, 100px) + 1rem);
 }
 
@@ -77,20 +73,16 @@ h1, h2, h3 { font-weight: 800; line-height: 1.04; letter-spacing: -.03em; }
 
 :focus-visible { outline: 2px solid var(--muted); outline-offset: 3px; }
 
-/* ============================================================
-   Entry curtain
-   ============================================================ */
 .loader {
   position: fixed; inset: 0; z-index: 999;
   background: var(--dark); color: var(--paper);
   display: grid; place-items: center;
   transition: transform .9s var(--ease);
-  animation: curtain-failsafe .6s var(--ease) 4s forwards; /* if JS stalls after boot */
+  animation: curtain-failsafe .6s var(--ease) 4s forwards;
 }
 .loader.done { transform: translateY(-101%); }
 @keyframes curtain-failsafe { to { transform: translateY(-101%); visibility: hidden; } }
-/* Opened straight from disk (file://) the module is blocked and never runs.
-   script.js sets `js` on <html>; without it, skip the curtain entirely. */
+
 html:not(.js) .loader { display: none; }
 .loader-inner {
   width: min(88vw, var(--maxw)); padding-inline: var(--pad);
@@ -99,8 +91,6 @@ html:not(.js) .loader { display: none; }
 .loader-brand { font-weight: 800; letter-spacing: -.04em; font-size: clamp(2rem, 8vw, 5rem); }
 .loader-num   { font-variant-numeric: tabular-nums; font-size: 1rem; color: var(--accent-hi); }
 
-
-/* shown only on file://, where the browser refuses to load the ES module */
 .file-note { display: none; }
 html.is-file .file-note {
   display: block; position: fixed; right: 1rem; bottom: 1rem; z-index: 300;
@@ -113,19 +103,14 @@ html.is-file .file-note {
 .file-note strong { display: block; font-weight: 600; }
 .file-note code { background: rgba(244,244,242,.14); border-color: transparent; color: var(--paper); }
 
-/* scroll progress */
 .progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 200; pointer-events: none; }
-/* white + difference so the bar stays visible over both the dark announce
-   strip and the light sticky header */
+
 .progress i {
   display: block; height: 100%; width: 100%;
   background: #fff; transform: scaleX(0); transform-origin: left;
   mix-blend-mode: difference;
 }
 
-/* ============================================================
-   Announcement + header
-   ============================================================ */
 .announce {
   background: var(--dark); color: var(--paper);
   font-size: .78rem; letter-spacing: .02em;
@@ -142,7 +127,7 @@ html.is-file .file-note {
   transition: border-color .3s, background .3s;
 }
 .site-header.is-stuck { border-color: var(--hair); background: color-mix(in srgb, var(--paper) 94%, transparent); }
-/* slide the bar away going down, bring it back coming up */
+
 .site-header { transition: border-color .3s, background .3s, transform .45s var(--ease); }
 .site-header.is-hidden { transform: translateY(-102%); }
 .site-header.nav-open { transform: none; }
@@ -177,9 +162,6 @@ html.is-file .file-note {
 .menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(3.5px) rotate(45deg); }
 .menu-toggle[aria-expanded="true"] span:nth-child(2) { transform: translateY(-3.5px) rotate(-45deg); }
 
-/* ============================================================
-   Buttons
-   ============================================================ */
 .btn {
   --bg: var(--ink); --fg: var(--paper);
   display: inline-flex; align-items: center; justify-content: center;
@@ -191,15 +173,13 @@ html.is-file .file-note {
   will-change: transform;
 }
 .btn:hover { transform: translateY(-3px); }
-/* photos keep their real colour; a hair more contrast so they sit against
-   the near-white page without looking washed out */
+
 .product-photo,
 .cat-media img,
 .offer img,
 .orb img,
 .showcase-img { filter: contrast(1.03) saturate(1.02); }
 
-/* magnetic buttons track the cursor quickly, then spring back */
 [data-magnetic] { transition: transform .5s var(--ease), background .3s, color .3s, border-color .3s; }
 [data-magnetic]:hover { transition: transform .1s linear, background .3s, color .3s, border-color .3s; }
 .btn-solid:hover { background: var(--paper); border-color: var(--ink); color: var(--ink); }
@@ -220,7 +200,6 @@ html.is-file .file-note {
 .link-arrow span { display: inline-block; transition: transform .45s var(--ease); }
 .link-arrow:hover span { transform: translateX(5px); }
 
-/* section headings split into words by script.js */
 .split { display: inline-block; overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; vertical-align: bottom; }
 .split > i {
   display: inline-block; font-style: inherit;
@@ -230,11 +209,6 @@ html.is-file .file-note {
 .in .split > i, [data-reveal].in .split > i { transform: none; }
 html:not(.js) .split > i { transform: none; }
 
-/* ============================================================
-   HERO
-   ============================================================ */
-/* --chrome-h is the measured height of the announce strip + header, set by
-   script.js, so the hero fills exactly the space left below them. */
 .hero {
   position: relative;
   min-height: calc(100svh - var(--chrome-h, 112px));
@@ -256,13 +230,6 @@ html:not(.js) .split > i { transform: none; }
   background: radial-gradient(40% 40% at 65% 45%, rgba(244,244,242,.16), transparent 70%); }
 .hero.no-3d .hero-fallback { display: block; }
 
-/* ============================================================
-   CSS 3D eyeframe
-   Baseline hero object. No script, no WebGL, no network. The face and the
-   silhouette sit on separate Z planes and the temples swing back into the
-   scene, so the idle rotation produces real parallax rather than a flip.
-   Hidden once the WebGL scene takes over (.hero.has-webgl).
-   ============================================================ */
 .svg-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .eyeframe {
@@ -276,7 +243,7 @@ html:not(.js) .split > i { transform: none; }
 .ef-rig {
   position: relative;
   width: min(56vw, 660px); aspect-ratio: 520 / 210;
-  margin: -6% 0 0 20%;                   /* sit right of the headline column */
+  margin: -6% 0 0 20%;
   transform-style: preserve-3d;
   animation: ef-float 7.5s ease-in-out infinite;
 }
@@ -297,8 +264,6 @@ html:not(.js) .split > i { transform: none; }
 .ef-shape { position: absolute; inset: 0; transform-style: preserve-3d; display: none; }
 .ef-shape svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
-/* silhouette sits behind the face and reads as the depth of the acetate;
-   black frames on a black ground need the rim light to describe the form */
 .ef-back { color: #000; transform: translateZ(-18px); }
 .ef-back .hl { display: none; }
 .ef-face {
@@ -313,9 +278,6 @@ html:not(.js) .split > i { transform: none; }
   background: radial-gradient(closest-side, rgba(244,244,242,.16), transparent 72%);
 }
 
-/* temples hinge at the outer edge and sweep back into the scene */
-/* bright at the hinge, falling off with distance, so each arm reads as
-   receding rather than as a stick lying flat on the screen */
 .ef-temple {
   position: absolute; top: 40%; height: 3.6%; width: 44%;
   border-radius: 999px;
@@ -329,7 +291,6 @@ html:not(.js) .split > i { transform: none; }
   background: linear-gradient(270deg, #dcdcdc 0%, #8a8a8a 38%, #2e2e2e 100%);
 }
 
-/* --- shape selection, driven purely by the radios in .hero --- */
 .fs-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 #fs-sun:checked      ~ .hero-stage .ef-shape[data-shape="sun"],
 #fs-aviator:checked  ~ .hero-stage .ef-shape[data-shape="aviator"],
@@ -341,7 +302,6 @@ html:not(.js) .split > i { transform: none; }
   .ef-body { transform: rotateY(-16deg) rotateX(5deg); }
 }
 
-/* print grain, kills the sterile render look */
 .grain {
   position: absolute; inset: -50%; z-index: 1; pointer-events: none; opacity: .32;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
@@ -358,14 +318,12 @@ html:not(.js) .split > i { transform: none; }
 .hero-copy { max-width: 620px; }
 .hero h1 { margin-bottom: 1.6rem; }
 
-/* plain one-line intro, body font, no rule */
 .hero-kicker {
   color: rgba(244,244,242,.6);
   font-size: .95rem;
   margin-bottom: 1.4rem;
 }
 
-/* headline: word by word mask reveal */
 .hero .line {
   display: block; overflow: hidden;
   padding-bottom: .1em; margin-bottom: -.1em;
@@ -385,7 +343,6 @@ html:not(.js) .split > i { transform: none; }
   font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: rgba(244,244,242,.5);
 }
 
-/* 3D frame shape switcher */
 .frame-switch { display: grid; justify-items: center; gap: .55rem; }
 .fs-caption {
   font-size: .68rem; letter-spacing: .16em; color: rgba(244,244,242,.45);
@@ -401,7 +358,6 @@ html:not(.js) .split > i { transform: none; }
 }
 .fs:hover { color: var(--paper); border-color: rgba(244,244,242,.45); }
 
-/* active chip + caption text, both selected by the radios (no JS needed) */
 #fs-sun:checked      ~ .hero-foot .fs[for="fs-sun"],
 #fs-aviator:checked  ~ .hero-foot .fs[for="fs-aviator"],
 #fs-round:checked    ~ .hero-foot .fs[for="fs-round"],
@@ -420,25 +376,21 @@ html:not(.js) .split > i { transform: none; }
   outline: 2px solid var(--paper); outline-offset: 3px;
 }
 
-/* the switcher drives the CSS frame too, so it stays useful without WebGL */
 .hero.no-3d .frame-switch { display: none; }
 
-/* ============================================================
-   Marquee
-   ============================================================ */
 .marquee {
   background: var(--dark); color: var(--paper);
   padding-block: 1.05rem;
   border-block: 1px solid var(--dark-2);
   overflow: hidden;
-  /* fade both edges so words leaving frame read as intentional, not clipped */
+
   -webkit-mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
           mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
 }
 .marquee-track {
   display: flex; width: max-content;
   will-change: transform;
-  /* CSS animation is the no-JS fallback only; script.js overrides it */
+
   animation: slide 44s linear infinite;
 }
 .marquee:hover .marquee-track { animation-play-state: paused; }
@@ -451,14 +403,9 @@ html:not(.js) .split > i { transform: none; }
 .marquee-group i { color: rgba(244,244,242,.3); font-style: normal; font-size: .4rem; }
 @keyframes slide { to { transform: translateX(-50%); } }
 
-/* ============================================================
-   Promo band
-   ============================================================ */
 .promo { background: var(--paper); color: var(--ink); padding-block: clamp(3rem, 6vw, 5rem); text-align: center; }
 .promo-inner { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
 
-/* headline with circular photos set inline, like punctuation in the sentence.
-   Smaller than the .display default so the copy below has room to breathe. */
 .promo-title {
   font-size: clamp(2rem, 1.2rem + 3.4vw, 3.9rem);
   line-height: 1.12; letter-spacing: -.035em;
@@ -485,13 +432,8 @@ html:not(.js) .split > i { transform: none; }
 .promo-cta span { display: inline-block; transition: transform .35s var(--ease); }
 .promo-cta:hover span { transform: translateX(5px); }
 
-/* ============================================================
-   Shop by category
-   ============================================================ */
 .section-head { display: flex; align-items: end; justify-content: space-between; gap: var(--s-2); margin-bottom: clamp(1.3rem, 3vw, 2.1rem); }
 
-/* auto-advancing slider: a horizontal scroll-snap viewport that script.js
-   nudges one page at a time. Works as a plain swipeable strip with no JS. */
 .cat-slider { position: relative; }
 .cat-viewport {
   display: flex; gap: 1rem;
@@ -530,8 +472,6 @@ html:not(.js) .split > i { transform: none; }
 .cat-card { transition: box-shadow .3s var(--ease), border-color .3s var(--ease); }
 .cat-card:hover { box-shadow: 0 10px 30px -20px rgba(10,10,10,.3); }
 
-/* product shots: plain white card, hairline border, whole frame visible,
-   dark label sitting on clean white below. No overlay, no scrim. */
 .cat-card:has(.cat-media-product) { background: #fff; border: 1px solid var(--hair); }
 .cat-media.cat-media-product { background: #fff; }
 .cat-media-product::after,
@@ -547,35 +487,25 @@ html:not(.js) .split > i { transform: none; }
 .cat-body h3 { font-size: clamp(1.15rem, .95rem + 1vw, 1.7rem); letter-spacing: -.03em; overflow-wrap: anywhere; }
 .cat-body p { color: rgba(244,244,242,.7); font-size: .85rem; margin-top: .2rem; margin-bottom: .9rem; }
 
-/* greyscale gradient = the fallback shown when a photo is absent */
 [data-duotone="a"] { background: linear-gradient(140deg, #161616 8%, #4a4a4a 96%); }
 [data-duotone="b"] { background: linear-gradient(140deg, #1a1a1a 8%, #565656 96%); }
 [data-duotone="c"] { background: linear-gradient(140deg, #121212 8%, #3c3c3c 96%); }
 [data-duotone="d"] { background: linear-gradient(140deg, #1d1d1d 8%, #606060 96%); }
 [data-duotone="e"] { background: linear-gradient(140deg, #171717 8%, #444444 96%); }
 
-/* faint frame motif over the gradient (hidden once a photo covers it) */
 .cat-media::after {
   content: ""; position: absolute; inset: 0;
   background:
     radial-gradient(70% 90% at 74% 12%, rgba(244,244,242,.12), transparent 62%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='140'%3E%3Cg fill='none' stroke='%23f4f4f2' stroke-opacity='.09' stroke-width='3'%3E%3Ccircle cx='84' cy='78' r='40'/%3E%3Ccircle cx='176' cy='78' r='40'/%3E%3Cpath d='M124 74h28M44 66c-10-4-18 0-20 8M216 66c10-4 18 0 20 8'/%3E%3C/g%3E%3C/svg%3E") center/300px no-repeat;
 }
-/* legibility scrim under the overlaid text (works over photo or gradient) */
+
 .cat-card::after, .offer::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: linear-gradient(to top, rgba(10,10,10,.92) 4%, rgba(10,10,10,.25) 46%, rgba(10,10,10,.05) 72%);
 }
 .cat-body { z-index: 2; }
 
-/* ============================================================
-   Product grid
-   ============================================================ */
-/* align-items:center stops a squeezed button (text wrapped to 2 lines) from
-   stretching every sibling pill to match its height - without it a narrow
-   container turns "All" into a tall oval instead of a pill. flex-wrap is the
-   same insurance at the row level: pills drop to a second line instead of
-   being squeezed until their own label wraps. */
 .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .4rem; }
 .tab {
   padding: .5rem 1rem; border-radius: 999px; font-size: .84rem; font-weight: 600;
@@ -592,18 +522,18 @@ html:not(.js) .split > i { transform: none; }
   border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column;
   transition: box-shadow .3s var(--ease), border-color .3s var(--ease);
 }
-/* calm hover: no movement, just a clearer edge + soft shadow */
+
 .product:hover { box-shadow: 0 10px 30px -20px rgba(20,17,13,.35); border-color: var(--ink-2); }
 .product-media { position: relative; aspect-ratio: 5 / 3.4; background: linear-gradient(160deg, #ffffff, #ececec); border-radius: var(--radius); display: grid; place-items: center; overflow: hidden; }
 .product-media svg { width: 84%; color: var(--ink); }
-/* real photographs, so fill the frame rather than letterboxing a cut-out */
+
 .product-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .badge {
   position: absolute; top: .6rem; left: .6rem; z-index: 2;
   background: var(--sale); color: #fff; font-size: .68rem; font-weight: 700;
   padding: .2rem .5rem; border-radius: 3px; letter-spacing: .04em;
 }
-/* always visible (works on touch), just quieter until hover/focus */
+
 .wish {
   position: absolute; top: .5rem; right: .5rem; z-index: 2;
   width: 30px; height: 30px; border-radius: 999px;
@@ -621,9 +551,6 @@ html:not(.js) .split > i { transform: none; }
 .countdown { margin-top: .55rem; display: flex; gap: .3rem; font-variant-numeric: tabular-nums; }
 .countdown span { background: var(--paper-2); border-radius: 3px; padding: .15rem .35rem; font-size: .68rem; font-weight: 700; }
 
-/* ============================================================
-   Statement (word illumination on scroll)
-   ============================================================ */
 .statement { background: var(--paper); }
 .statement-text {
   font-family: var(--font); font-weight: 800;
@@ -634,9 +561,6 @@ html:not(.js) .split > i { transform: none; }
 .statement-text .w { color: var(--hair); transition: color .35s var(--ease); }
 .statement-text .w.lit { color: var(--ink); }
 
-/* ============================================================
-   Showcase
-   ============================================================ */
 .showcase { background: var(--paper-2); }
 .showcase-inner { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
 .showcase-media { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden;
@@ -646,15 +570,13 @@ html:not(.js) .split > i { transform: none; }
   background-repeat: no-repeat; background-position: center; background-size: contain;
   filter: drop-shadow(0 30px 40px rgba(0,0,0,.5));
 }
-/* full width always; the extra 16% of height is the slack the parallax
-   drifts through, so an edge can never be exposed */
+
 .showcase-img {
   position: absolute; left: 0; right: 0; top: -8%; z-index: 1;
   width: 100%; height: 116%; object-fit: cover;
   will-change: transform;
 }
-/* the drawn frame is only a stand-in; drop it once the photo is in the DOM
-   (onerror removes the <img>, which brings the drawing back) */
+
 .showcase-media:has(.showcase-img) .showcase-glass { display: none; }
 .showcase-tag {
   position: absolute; right: .9rem; bottom: .9rem; z-index: 2;
@@ -668,9 +590,6 @@ html:not(.js) .split > i { transform: none; }
 .spec-list dt { color: var(--muted); }
 .spec-list dd { font-weight: 600; }
 
-/* ============================================================
-   Offers strip
-   ============================================================ */
 .offers .section-title { margin-bottom: clamp(1.6rem, 4vw, 2.6rem); }
 .offer-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; }
 .offer {
@@ -687,7 +606,6 @@ html:not(.js) .split > i { transform: none; }
 .offer strong { font-size: clamp(1.1rem, .9rem + 1.2vw, 1.7rem); letter-spacing: -.03em; }
 .offer a { position: relative; z-index: 2; font-size: .82rem; font-weight: 600; border-bottom: 1px solid currentColor; align-self: start; margin-top: .4rem; }
 
-/* product shots: plain white tile, hairline border, no scrim, dark label */
 .offer-product {
   background: #fff; border: 1px solid var(--hair); color: var(--ink);
   min-height: clamp(240px, 26vw, 320px);
@@ -702,9 +620,6 @@ html:not(.js) .split > i { transform: none; }
 .offer-product strong,
 .offer-product a { color: var(--ink); }
 
-/* ============================================================
-   Footer + giant wordmark
-   ============================================================ */
 .site-footer { background: var(--dark); color: var(--paper); padding-top: clamp(2.75rem, 5vw, 4rem); overflow: hidden; }
 .footer-top { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--s-4); padding-bottom: var(--s-4); }
 .footer-mail { display: inline-block; font-size: clamp(1.5rem, 1rem + 3vw, 3rem); font-weight: 800; letter-spacing: -.04em; margin: .8rem 0 1rem; border-bottom: 1px solid rgba(244,244,242,.3); }
@@ -724,9 +639,6 @@ html:not(.js) .split > i { transform: none; }
 }
 .footer-legal { display: flex; justify-content: space-between; gap: var(--s-2); padding-block: 1.6rem; border-top: 1px solid var(--dark-2); color: rgba(244,244,242,.45); font-size: .78rem; }
 
-/* ============================================================
-   Scroll reveal
-   ============================================================ */
 [data-reveal] { will-change: transform, opacity, filter; }
 [data-reveal="up"] {
   opacity: 0; transform: translateY(38px); filter: blur(6px);
@@ -745,14 +657,10 @@ html:not(.js) .split > i { transform: none; }
 [data-reveal="mask"].in .line > span { transform: none; }
 [data-reveal="mask"].in .line:nth-child(2) > span { transition-delay: .1s; }
 
-/* section contents cascade in after the block starts moving */
 .in-view [data-reveal].in { transition-delay: calc(140ms + var(--i, 0) * 80ms); }
 [data-reveal].in { transition-delay: calc(var(--i, 0) * 70ms); }
 .stagger > * { transition-delay: calc(var(--i, 0) * 70ms); }
 
-/* every section moves in as a block when it enters the viewport
-   (script.js adds .in-view and .in to its [data-reveal] children).
-   Hero is excluded, it has its own intro. */
 main > section:not(.hero),
 .site-footer {
   opacity: 0;
@@ -762,7 +670,6 @@ main > section:not(.hero),
 main > section.in-view,
 .site-footer.in-view { opacity: 1; transform: none; }
 
-/* hero intro is driven by body.ready, word by word */
 .hero .w { transform: translateY(112%); transition: transform 1.05s var(--ease); }
 body.ready .hero .w { transform: none; }
 .hero h1 .line:nth-child(1) .w:nth-child(1) { transition-delay: .05s; }
@@ -775,9 +682,6 @@ body.ready .hero [data-reveal] { opacity: 1; transform: none; filter: none; }
 .hero-foot { opacity: 0; transform: translateY(16px); transition: opacity .9s var(--ease) .6s, transform .9s var(--ease) .6s; }
 body.ready .hero-foot { opacity: 1; transform: none; }
 
-/* No JS (file:// where the module is blocked): force every section visible so
-   the page is readable instead of blank. JS present -> script.js sets html.js
-   and this block does nothing. */
 html:not(.js) [data-reveal],
 html:not(.js) [data-reveal="mask"] .line > span,
 html:not(.js) .hero .w,
@@ -791,9 +695,6 @@ html:not(.js) .site-footer {
   filter: none !important;
 }
 
-/* ============================================================
-   Responsive
-   ============================================================ */
 @media (max-width: 1080px) {
   .product-grid { grid-template-columns: repeat(3, 1fr); }
   .product-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -804,9 +705,6 @@ html:not(.js) .site-footer {
   .frame-switch { justify-items: end; }
 }
 
-/* ---- Mobile / tablet-portrait: chrome + section layout ----
-   Purely a width call - the header, showcase and footer just need less
-   horizontal room than the desktop layout assumes. */
 @media (max-width: 820px) {
   .nav-links { display: none; }
   .menu-toggle { display: flex; }
@@ -818,30 +716,18 @@ html:not(.js) .site-footer {
   .showcase-inner { grid-template-columns: 1fr; }
   .footer-top { grid-template-columns: 1fr; gap: var(--s-3); }
 
-  /* Trending's heading + filter pills is the one section-head that runs out
-     of room (the tabs need real width of their own to wrap cleanly) */
   .trending .section-head { flex-direction: column; align-items: flex-start; gap: .9rem; }
   .tabs { width: 100%; }
 }
 
-/* ---- Hero ----
-   The frame sits to the right of the copy only because there is a wide,
-   landscape-shaped stage to put it in - so this is a width-OR-aspect call,
-   not a width-only one: a portrait tablet (an iPad Pro 11" at 834px is wider
-   than the breakpoint above but still tall and narrow) has exactly the same
-   problem as a phone. Below either threshold the copy runs the full measure,
-   so instead of the frame layering in behind (and through) the text, it
-   drops into its own fixed-height band underneath - still the first thing on
-   screen, just no longer fighting the headline for space. */
-@media (max-width: 900px), (max-aspect-ratio: 4/5) {
+@media (max-width: 960px) {
   .hero { flex-direction: column; align-items: stretch; min-height: 0; }
   .hero-grid { order: 1; padding-block: clamp(2.5rem, 9vw, 3.5rem) 1.75rem; }
   .hero-stage {
     position: relative; inset: auto; order: 2;
     height: min(80vw, 380px); min-height: 230px;
   }
-  /* a plain vignette instead of the side-lit gradient built for a wide stage -
-     that one only protected copy sitting to its left, and here there is none */
+
   .hero-stage::after {
     background:
       radial-gradient(65% 78% at 50% 42%, transparent 42%, rgba(10,10,10,.6) 100%),
@@ -855,13 +741,9 @@ html:not(.js) .site-footer {
     justify-content: center; padding-block: 1.5rem 2rem;
   }
   .frame-switch { justify-items: center; }
-  /* four chips no longer fit one row once the bar is centred instead of
-     right-anchored; wrap them into a tidy 2x2 instead of running off-screen */
+
   .fs-row { flex-wrap: wrap; justify-content: center; max-width: 300px; }
 
-  /* the divider between spec items is an absolutely-positioned tick mark
-     meant for a single row; stacked into a column it just floats stray at
-     the left edge, so the list drops the dividers and goes column instead */
   .hero-spec { flex-direction: column; align-items: flex-start; gap: .6rem; }
   .hero-spec li + li::before { display: none; }
 }
@@ -870,12 +752,10 @@ html:not(.js) .site-footer {
   .product-grid, .product-grid-4 { grid-template-columns: repeat(2, 1fr); }
   .cat-slide { flex-basis: 100%; }
   .offer-strip { grid-template-columns: 1fr 1fr; }
-  /* 5 cards in 2 columns leaves the last one stranded alone on its own row;
-     give it the full row instead of an empty cell beside it */
+
   .offer-strip > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .footer-cols { grid-template-columns: 1fr 1fr; }
-  /* the announcement message + link only fit one line down to about this
-     width; below it, stack them so neither is cramped or clipped */
+
   .announce-row { flex-direction: column; align-items: flex-start; gap: .3rem; padding-block: .6rem; }
 }
 
@@ -885,9 +765,6 @@ html:not(.js) .site-footer {
   .footer-cols { grid-template-columns: 1fr; gap: var(--s-2); }
 }
 
-/* ============================================================
-   Reduced motion
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }

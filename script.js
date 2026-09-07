@@ -1,16 +1,3 @@
-/* ============================================================
-   EYRO Eyewear, New York - landing page behaviour
-   - Three.js hero (procedural glasses, env-lit, bloom) via dynamic
-     import so a CDN hiccup never blocks the rest of the page
-   - entry curtain, sticky header, mobile nav
-   - IntersectionObserver reveals, scroll-lit statement, parallax
-   - product grid rendered from data, tab filter, countdowns
-   ============================================================ */
-
-/* Mark that the module actually loaded. CSS uses html.js to arm the curtain
-   and the hidden reveal states. If this file is blocked (opened as a file://
-   path, where ES modules are refused) the class is never set and the page
-   just renders static instead of stuck behind the curtain. */
 document.documentElement.classList.add('js');
 
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -19,7 +6,6 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp  = (a, b, t) => a + (b - a) * t;
 
-/* ---------- glasses artwork (shared line drawing) ---------- */
 function glassInner(style, stroke) {
   const a = `stroke="${stroke}" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"`;
   switch (style) {
@@ -33,7 +19,7 @@ function glassInner(style, stroke) {
       return `<path d="M18 28h66M116 28h66" stroke="${stroke}" fill="none" stroke-width="9" stroke-linecap="round"/><path d="M20 29c3 21 15 31 31 31s28-12 31-31M116 29c3 21 15 31 31 31s28-12 31-31" ${a}/><path d="M83 33h34" ${a}/>`;
     case 'geo':
       return `<path d="M28 40 52 18l30 5 3 27-23 20-32-8Z" ${a}/><path d="M120 40 144 18l30 5 3 27-23 20-32-8Z" ${a}/><path d="M84 38h34" ${a}/>`;
-    default: // round
+    default:
       return `<circle cx="56" cy="41" r="27" ${a}/><circle cx="144" cy="41" r="27" ${a}/><path d="M83 39h34M17 32c-6-2-10 0-12 4M183 32c6-2 10 0 12 4" ${a}/>`;
   }
 }
@@ -41,10 +27,6 @@ const glassesMarkup   = (style) => `<svg viewBox="0 0 200 82" role="img" aria-la
 const glassesDataURI  = (style, stroke) =>
   'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 82">${glassInner(style, stroke)}</svg>`);
 
-/* ---------- product data ----------
-   `img` is an Unsplash photo id. Swap `photo()` for your own CDN and the
-   whole grid follows. If an image fails, the card falls back to the drawn
-   `style` glasses, so the grid never shows a hole.                        */
 const photo = (id, w = 640, h = 440) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&q=75&fm=jpg&fit=crop`;
 
@@ -94,11 +76,10 @@ function renderProducts() {
   if (b) [...PRODUCTS].reverse().slice(0, 8).forEach((p) => b.appendChild(productCard(p)));
 }
 
-/* ---------- shared countdown ---------- */
 function initCountdowns() {
   const els = $$('[data-countdown]');
   if (!els.length) return;
-  const target = Date.now() + 26 * 36e5 + 17 * 6e4; // ~1d 2h 17m out
+  const target = Date.now() + 26 * 36e5 + 17 * 6e4;
   const pad = (n) => String(n).padStart(2, '0');
   const tick = () => {
     let d = Math.max(0, target - Date.now());
@@ -113,7 +94,6 @@ function initCountdowns() {
   setInterval(tick, 1000);
 }
 
-/* ---------- tab filter ---------- */
 function initTabs() {
   const tabs = $$('.tab');
   const grid = $('#trending-grid');
@@ -132,7 +112,6 @@ function initTabs() {
   }));
 }
 
-/* ---------- entry curtain ---------- */
 function initLoader() {
   const el = $('.loader');
   const done = () => document.body.classList.add('ready');
@@ -152,12 +131,10 @@ function initLoader() {
     }, 180);
   };
   step();
-  setTimeout(done, 3500);           // failsafe: reveal page
-  setTimeout(() => el.remove(), 4500); // failsafe: drop curtain node
+  setTimeout(done, 3500);
+  setTimeout(() => el.remove(), 4500);
 }
 
-
-/* ---------- header: sticky styling + hide going down, show coming up ------- */
 function initHeader() {
   const h = $('.site-header');
   if (!h) return;
@@ -189,7 +166,6 @@ function initHeader() {
   }));
 }
 
-/* ---------- measure the fixed chrome so the hero can fill the rest ------- */
 function initChromeHeight() {
   const parts = [$('.announce'), $('.site-header')].filter(Boolean);
   if (!parts.length) return;
@@ -206,7 +182,6 @@ function initChromeHeight() {
   }
 }
 
-/* ---------- scroll progress bar ---------- */
 function initProgress() {
   const bar = $('#progress-bar');
   if (!bar) return;
@@ -221,7 +196,6 @@ function initProgress() {
   addEventListener('resize', update);
 }
 
-/* ---------- split headings into words for a masked rise ---------- */
 function initSplit() {
   $$('.section-title, .statement-title').forEach((el) => {
     if (el.querySelector('.split')) return;
@@ -232,10 +206,6 @@ function initSplit() {
   });
 }
 
-/* ---------- section reveal ----------
-   When a section first enters view it moves in as a block AND its
-   [data-reveal] children cascade, so the whole section reads as one
-   choreographed motion rather than parts fading in independently.       */
 function initSectionReveal() {
   const secs = $$('main > section:not(.hero), .site-footer');
   if (!secs.length) return;
@@ -255,7 +225,6 @@ function initSectionReveal() {
   }, { threshold: 0.08, rootMargin: '0px 0px -12% 0px' });
   secs.forEach((s) => io.observe(s));
 
-  // failsafes: whatever is already on screen, then a hard sweep
   const near = () => secs.forEach((s) => {
     if (s.getBoundingClientRect().top < innerHeight * 0.95) play(s);
   });
@@ -263,7 +232,6 @@ function initSectionReveal() {
   setTimeout(near, 800);
 }
 
-/* ---------- magnetic buttons ---------- */
 function initMagnetic() {
   if (reduce || matchMedia('(pointer: coarse)').matches) return;
   $$('[data-magnetic]').forEach((el) => {
@@ -278,10 +246,6 @@ function initMagnetic() {
   });
 }
 
-/* ---------- marquee: one smooth transform loop ----------
-   The CSS keyframe is only a fallback. Here we drive translateX by hand so
-   the scroll-velocity nudge is just an additive speed term, never a
-   duration change (that was what made it stutter).                        */
 function initMarquee() {
   const marquee = $('.marquee');
   const track = $('.marquee-track');
@@ -290,11 +254,10 @@ function initMarquee() {
   track.style.animation = 'none';
   const seed = $('.marquee-group', track);
 
-  // clone groups until the strip comfortably overruns the viewport
-  let unit = seed.offsetWidth;                 // one group, padding included
+  let unit = seed.offsetWidth;
   while (track.scrollWidth < innerWidth + unit * 2) track.appendChild(seed.cloneNode(true));
 
-  const BASE = 46;            // px per second at rest
+  const BASE = 46;
   let x = 0, boost = 0, paused = false;
   let lastScroll = scrollY, lastT = performance.now();
 
@@ -312,17 +275,12 @@ function initMarquee() {
     lastT = now;
     boost *= 0.9;
     x -= (paused ? boost : BASE + boost) * dt;
-    if (x <= -unit) x += unit;                 // seamless wrap
+    if (x <= -unit) x += unit;
     track.style.transform = `translate3d(${x.toFixed(2)}px,0,0)`;
   };
   requestAnimationFrame(tick);
 }
 
-/* ---------- category slider: auto-advance, snap, dots, arrows ----------
-   The markup is a plain scroll-snap strip, so it swipes fine with no JS.
-   Here we add the timed advance, the dot rail and the arrow buttons, and
-   we pause whenever the user is hovering, focused inside, or on another
-   tab. prefers-reduced-motion keeps the controls but drops the timer.   */
 function initCategorySlider() {
   const vp = $('#cat-viewport');
   if (!vp) return;
@@ -375,7 +333,7 @@ function initCategorySlider() {
     paint();
   };
 
-  let onScreen = true, hot = true;   // hot = not hovered / focused / hidden
+  let onScreen = true, hot = true;
   const start = () => { if (!reduce && !timer && onScreen && hot) timer = setInterval(() => go(page + 1), DELAY); };
   const stop  = () => { clearInterval(timer); timer = null; };
   const setHot = (v) => { hot = v; v ? start() : stop(); };
@@ -391,7 +349,6 @@ function initCategorySlider() {
     stop(); go(page + Number(a.dataset.dir || 1)); start();
   }));
 
-  // keep the dots honest when the strip is dragged or wheel-scrolled by hand
   let sTick;
   vp.addEventListener('scroll', () => {
     clearTimeout(sTick);
@@ -419,7 +376,6 @@ function initCategorySlider() {
   start();
 }
 
-/* ---------- glasses artwork in the DOM ---------- */
 function initGlassArt() {
   $$('.orb[data-shape]').forEach((o) => {
     const stroke = o.classList.contains('orb-lg') ? '#101010' : '#f4f4f2';
@@ -429,10 +385,6 @@ function initGlassArt() {
   if (sg) sg.style.backgroundImage = `url("${glassesDataURI('browline', '#f4f4f2')}")`;
 }
 
-/* ---------- reveal on scroll ----------
-   Sets the --i stagger index on every [data-reveal], then observes only the
-   handful that live outside a tracked section (initSectionReveal drives the
-   rest, so their reveal stays in step with the section's own motion).     */
 function initReveals() {
   const els = $$('[data-reveal]');
   els.forEach((el) => {
@@ -456,8 +408,6 @@ function initReveals() {
   }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
   targets.forEach((e) => io.observe(e));
 
-  // Scroll-driven backstop: IO can miss elements on large programmatic jumps,
-  // restored sessions, or zoom. Anything at/above 88% of the viewport is shown.
   let ticking = false;
   const sweep = () => {
     ticking = false;
@@ -474,10 +424,9 @@ function initReveals() {
   addEventListener('resize', onScroll);
   addEventListener('load', sweep);
   setTimeout(sweep, 800);
-  setTimeout(() => targets.forEach((e) => e.classList.add('in')), 5000); // hard failsafe
+  setTimeout(() => targets.forEach((e) => e.classList.add('in')), 5000);
 }
 
-/* ---------- statement: light words as they scroll through ---------- */
 function initStatement() {
   const el = $('#statement');
   if (!el) return;
@@ -490,7 +439,7 @@ function initStatement() {
   const update = () => {
     ticking = false;
     const r = el.getBoundingClientRect();
-    // progress of the block passing up through the viewport
+
     const p = clamp((innerHeight * 0.9 - r.top) / (r.height + innerHeight * 0.3), 0, 1);
     const lit = Math.round(p * spans.length);
     spans.forEach((s, i) => s.classList.toggle('lit', i < lit));
@@ -499,19 +448,18 @@ function initStatement() {
   update();
 }
 
-/* ---------- lightweight parallax ---------- */
 function initParallax() {
   const els = $$('[data-parallax]');
   if (!els.length || reduce) return;
-  const MAX = 60; // px of travel, capped
+  const MAX = 60;
   let ticking = false;
   const update = () => {
     ticking = false;
     els.forEach((el) => {
       const r = el.getBoundingClientRect();
-      // only move it while it is actually near the viewport
+
       if (r.bottom < -200 || r.top > innerHeight + 200) { el.style.transform = ''; return; }
-      const from = (r.top + r.height / 2 - innerHeight / 2) / innerHeight; // -1..1 across a screen
+      const from = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
       const amt = parseFloat(el.dataset.parallax);
       const y = clamp(-from * amt * 100, -MAX, MAX);
       el.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
@@ -522,16 +470,12 @@ function initParallax() {
   update();
 }
 
-/* ============================================================
-   Three.js hero. dynamic import, procedural frame, bloom
-   ============================================================ */
 async function initHero() {
   const stage = $('#hero-stage');
   const canvas = $('#scene');
   const hero = $('.hero');
   if (!canvas || !stage) return;
 
-  // WebGL support probe
   try {
     const probe = document.createElement('canvas');
     if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error('no webgl');
@@ -577,9 +521,6 @@ async function initHero() {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-  // lights: a dark studio with two softboxes, which is how black acetate is
-  // actually shot. the streaks they leave are the only thing that reads as
-  // "polished black" - flat black on a black stage reads as a silhouette.
   RectAreaLightUniformsLib.init();
 
   const boxTop = new THREE.RectAreaLight(0xffffff, 3.8, 5.5, 1.8);
@@ -592,17 +533,13 @@ async function initHero() {
   const rimLight = new THREE.SpotLight(0xffffff, 45, 24, Math.PI / 5, 0.5); rimLight.position.set(-4.6, 1.6, -3.4); scene.add(rimLight);
   scene.add(new THREE.AmbientLight(0xffffff, 0.13));
 
-  /* ---- materials (shared across frame swaps) ---- */
-  // polished acetate: a near-black base under a mirror clearcoat. the clearcoat
-  // is what catches the softboxes and traces the curve of the front.
   const acetate = new THREE.MeshPhysicalMaterial({
     color: 0x08080a, roughness: 0.28, metalness: 0,
     clearcoat: 1, clearcoatRoughness: 0.1,
     envMapIntensity: 0.12,
   });
   const steel = new THREE.MeshStandardMaterial({ color: 0xd6d9dd, metalness: 1, roughness: 0.3, envMapIntensity: 0.9 });
-  // real glass. transmission does all the work here, so opacity stays 1 and
-  // transparent stays off - mixing the two is what turns lenses into smoke.
+
   const lensMat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff, roughness: 0.06, metalness: 0,
     transmission: 1, thickness: 0.6, ior: 1.52,
@@ -611,7 +548,6 @@ async function initHero() {
     clearcoat: 0, envMapIntensity: 0.35, specularIntensity: 0.6,
   });
 
-  // rounded rectangle traced onto a Shape or Path
   function roundedRect(p, w, h, r, cy = 0) {
     const x = -w / 2, y = cy - h / 2;
     p.moveTo(x + r, y);
@@ -626,11 +562,6 @@ async function initHero() {
     return p;
   }
 
-  /* ---- face form ----
-     A frame front is cut flat out of an acetate sheet, then heated and bent
-     around the face. Skipping that bend is what made the old rims read as two
-     washers lying on a table, so every front part is cut flat, merged into one
-     piece, and then wrapped onto this cylinder. */
   const FACE_R = 7;
 
   function bend(x, y, z, out = new THREE.Vector3()) {
@@ -638,8 +569,6 @@ async function initHero() {
     return out.set(r * Math.sin(a), y, r * Math.cos(a) - FACE_R);
   }
 
-  // wrap a flat extruded front and taper its depth: acetate is thickest through
-  // the brow and thins out toward the bottom rim and the end pieces
   function formFront(geo) {
     const pos = geo.attributes.position;
     const v = new THREE.Vector3();
@@ -651,20 +580,16 @@ async function initHero() {
       pos.setXYZ(i, v.x, v.y, v.z);
     }
     pos.needsUpdate = true;
-    const out = toCreasedNormals(geo, 0.9);   // ~52deg: keeps the bevels crisp
+    const out = toCreasedNormals(geo, 0.9);
     if (out !== geo) geo.dispose();
     return out;
   }
 
-  // 16-point rounded-rectangle cross-section for the temples
   const BAR = Array.from({ length: 16 }, (_, i) => {
     const a = (i / 16) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
     return [Math.sign(c) * Math.abs(c) ** 0.45, Math.sign(s) * Math.abs(s) ** 0.45];
   });
 
-  /* Sweep that cross-section down a curve with an up-aligned frame, tapering as
-     it goes: an acetate temple is a flat bar that narrows toward the ear, not
-     the round wire the old build swept. */
   function barGeometry(curve, steps, wAt, tAt) {
     const N = BAR.length, UP = new THREE.Vector3(0, 1, 0);
     const pos = [], idx = [];
@@ -675,7 +600,7 @@ async function initHero() {
       const u = i / steps;
       curve.getPoint(u, p);
       curve.getTangent(u, tan);
-      side.crossVectors(UP, tan).normalize();   // right-handed with tan
+      side.crossVectors(UP, tan).normalize();
       up.crossVectors(tan, side).normalize();
       const w = wAt(u), t = tAt(u);
       for (const [cu, cv] of BAR) {
@@ -703,12 +628,6 @@ async function initHero() {
     return out;
   }
 
-  /* The flat cut of one rim, plus the numbers the bridge, end pieces and
-     hinges get placed from. holeHalfW is where the bridge has to land so it
-     meets the rim on solid material instead of over the lens.
-
-     Since models/ landed these are only the stand-in for a model that fails to
-     load, so each is keyed to the real frame it stands in for, not to a shape. */
   const SHAPES = {
     aviator: () => {
       const outer = new THREE.Shape();
@@ -730,8 +649,7 @@ async function initHero() {
                bridge: { top: 0.62, side: -0.08, nose: 0.14 } };
     },
     titanium: () => {
-      // hole sits low, leaving a heavy brow; the bridge runs across at brow
-      // height so the bar reads as one continuous piece, which is the shape
+
       const outer = roundedRect(new THREE.Shape(), 2.14, 1.7, 0.2);
       const hole  = roundedRect(new THREE.Path(),  1.86, 1.24, 0.26, -0.16);
       outer.holes.push(hole);
@@ -750,8 +668,6 @@ async function initHero() {
     bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2,
   };
 
-  // saddle bridge, cut from the same sheet at the same depth and overlapping
-  // both rims, so front + bridge merge into the one piece a real front is
   function bridgeShape(cx, holeHalfW, b) {
     const x = cx - holeHalfW - 0.02;
     const p = new THREE.Shape();
@@ -770,10 +686,9 @@ async function initHero() {
   function buildGlasses(kind = 'aviator') {
     const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.aviator)();
     const g = new THREE.Group();
-    const cx = halfW + 0.16;          // rim centre: half the bridge span out
-    const endX = cx + halfW;          // outer edge of the front
+    const cx = halfW + 0.16;
+    const endX = cx + halfW;
 
-    /* ---- the front: cut flat as one piece, then wrapped ---- */
     const rimCut = new THREE.ExtrudeGeometry(outer, EXTRUDE);
     const tabCut = new THREE.ExtrudeGeometry(roundedRect(new THREE.Shape(), 0.3, 0.34, 0.09), EXTRUDE);
     const parts = [
@@ -791,7 +706,6 @@ async function initHero() {
     frontGeo = formFront(frontGeo);
     g.add(new THREE.Mesh(frontGeo, acetate));
 
-    /* ---- lenses: same cut, same wrap, so they sit in the groove ---- */
     const lensCut = new THREE.ExtrudeGeometry(lens, LENS_EXTRUDE);
     const lensParts = [lensCut.clone().translate(-cx, 0, 0), lensCut.clone().translate(cx, 0, 0)];
     lensCut.dispose();
@@ -807,16 +721,14 @@ async function initHero() {
     lensGeo.computeVertexNormals();
     g.add(new THREE.Mesh(lensGeo, lensMat));
 
-    /* ---- hinges, rivets and temples, placed on the wrapped surface ---- */
     const face = EXTRUDE.depth / 2 * 0.86;
-    const splay = 0.35 * endX / FACE_R;    // temples splay a little, not the full wrap
+    const splay = 0.35 * endX / FACE_R;
     const Y = new THREE.Vector3(0, 1, 0);
 
     for (const s of [-1, 1]) {
       const theta = s * endX / FACE_R;
       const nrm = new THREE.Vector3(Math.sin(theta), 0, Math.cos(theta));
 
-      // two rivets set into the end piece, the classic acetate tell
       for (const k of [-1, 1]) {
         const dot = new THREE.Mesh(rivetGeo, steel);
         bend(s * (endX - 0.09), hingeY + k * 0.075, face, dot.position);
@@ -828,7 +740,6 @@ async function initHero() {
       bend(s * (endX + 0.01), hingeY, -0.03, hinge.position);
       g.add(hinge);
 
-      // temple: back and slightly out, then down and in behind the ear
       const h = bend(s * (endX - 0.01), hingeY, -0.02, new THREE.Vector3());
       const back = new THREE.Vector3(s * Math.sin(splay), 0, -Math.cos(splay));
       const lat  = new THREE.Vector3(s * Math.cos(splay), 0, s * Math.sin(splay));
@@ -843,7 +754,7 @@ async function initHero() {
       ));
     }
 
-    g.rotation.x = -0.13;             // pantoscopic tilt
+    g.rotation.x = -0.13;
     g.userData.procedural = true;
     return g;
   }
@@ -863,7 +774,7 @@ async function initHero() {
     }));
   }
 
-  const pivot = new THREE.Group();       // holds whichever frame is on show
+  const pivot = new THREE.Group();
   let glasses = buildGlasses('aviator');
   pivot.add(glasses);
   const dust = buildDust();
@@ -871,31 +782,19 @@ async function initHero() {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  // just enough bloom to lift the specular streaks; the old radius smeared the
-  // whole frame into a halo and cost it its silhouette
+
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.16, 0.35, 0.86));
   composer.addPass(new OutputPass());
 
-  /* ---- real frame models ----
-     Drop a .glb in models/ and it takes over from the procedural build for
-     that shape. Anything missing or broken falls back to the built frame, so
-     the hero never depends on an asset being present.
-
-     Once you can see a file, tune it here: `rotation` orients it so the front
-     faces the camera (+Z) with the temples running back, `scale` nudges the
-     auto-fit, `lift` shifts it after centring, and `materials: 'ours'` throws
-     the model's own materials away for the acetate/glass above - usually worth
-     trying, since marketplace models tend to ship with flat plastic shading. */
   const MODELS = {
     aviator:  { url: 'models/aviator_glasses.opt.glb',                        rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'model' },
     titanium: { url: 'models/titanium_frame_glass.opt.glb',                   rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'model' },
     sun:      { url: 'models/stylish_modern_high_quality_sunglasses.opt.glb', rotation: [0, 0, 0],           scale: 1, lift: [0, 0, 0], materials: 'ours' },
     round:    { url: 'models/eyewear_specs.opt.glb',                          rotation: [0, Math.PI / 2, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
   };
-  const FRONT_SPAN = 4.3;   // the procedural front is about this wide, so a
-                            // model auto-scaled to match drops straight in
-  const MAX_RADIUS = 2.6;  // ...unless that would make a deep model clip once
-                            // the hero rotates it, which the radius cap prevents
+  const FRONT_SPAN = 4.3;
+
+  const MAX_RADIUS = 2.6;
 
   const gltfLoader = new GLTFLoader()
     .setDRACOLoader(new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/'))
@@ -903,11 +802,6 @@ async function initHero() {
 
   const matsOf = (m) => (Array.isArray(m) ? m : [m]);
 
-  /* Which mesh is the lens? A gltf only gives us names, and which name to read
-     differs per file. Sketchfab writes mesh names as "<object>_<material>_<n>";
-     a model that puts one material on everything (sunglasses does - its frame
-     sits on a material called "Glass") has to be read off the object name,
-     while a properly split model is far more reliable read off its materials. */
   const LENS  = /lens|glass/;
   const METAL = /hinge|screw|metal|steel|rivet|wire|nose.?piece|nosss/;
 
@@ -919,7 +813,7 @@ async function initHero() {
       if (!o.isMesh) return;
       const label = (byMaterial
         ? matsOf(o.material).map((m) => m.name).join(' ')
-        : o.name.replace(/_[^_]*_\d+$/, '')        // drop the Sketchfab suffix
+        : o.name.replace(/_[^_]*_\d+$/, '')
       ).toLowerCase();
       if (LENS.test(label)) o.material = lensMat;
       else if (METAL.test(label)) o.material = steel;
@@ -927,8 +821,6 @@ async function initHero() {
     });
   }
 
-  /* Centre the model, scale it to the same span as the procedural front and
-     hand back something the swapper can treat like any other frame. */
   function fitModel(root, cfg) {
     const g = new THREE.Group();
     root.rotation.fromArray(cfg.rotation);
@@ -937,13 +829,12 @@ async function initHero() {
     const box = new THREE.Box3().setFromObject(g);
     const size = new THREE.Vector3(), mid = new THREE.Vector3();
     box.getSize(size); box.getCenter(mid);
-    root.position.sub(mid);                    // centre before scaling
-    // match the front widths so the three frames read at one size, but never at
-    // the cost of a temple swinging out of shot when the hero turns the model
+    root.position.sub(mid);
+
     const reach = box.getBoundingSphere(new THREE.Sphere()).radius;
     g.scale.setScalar(Math.min(FRONT_SPAN / Math.max(size.x, 1e-4), MAX_RADIUS / Math.max(reach, 1e-4)) * cfg.scale);
     g.position.fromArray(cfg.lift);
-    g.rotation.x = -0.13;                      // same pantoscopic tilt as the built frame
+    g.rotation.x = -0.13;
 
     if (cfg.materials === 'ours') reskin(g);
     else g.traverse((o) => {
@@ -952,7 +843,7 @@ async function initHero() {
     return g;
   }
 
-  const loaded = new Map();      // kind -> group, or null once we know there is no file
+  const loaded = new Map();
   const inflight = new Map();
   function loadFrame(kind) {
     if (loaded.has(kind)) return Promise.resolve(loaded.get(kind));
@@ -967,13 +858,12 @@ async function initHero() {
     return inflight.get(kind);
   }
 
-  /* ---- frame switcher: the built frame holds the spot until a model lands ---- */
-  let swapT = 1;          // 0..1, drives the scale punch on swap
+  let swapT = 1;
   let current = 'aviator';
   let swapId = 0;
 
   function disposeGroup(group) {
-    if (!group.userData.procedural) return;    // loaded models get reused, not freed
+    if (!group.userData.procedural) return;
     group.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
   }
 
@@ -986,25 +876,18 @@ async function initHero() {
     pivot.add(glasses);
   }
 
-  /* Hold whatever is already on screen until the new model arrives. Flashing
-     the procedural stand-in mid-swap reads as a glitch, and these files are big
-     enough that the flash would last long enough to notice. */
   async function setShape(kind) {
     if (kind === current || !MODELS[kind]) return;
     current = kind;
     const mine = ++swapId;
     const model = await loadFrame(kind);
-    if (mine !== swapId) return;               // a newer choice landed first
+    if (mine !== swapId) return;
     show(model || buildGlasses(kind));
   }
 
-  // the three models are ~18MB between them, so only the one on show is fetched
-  // up front; the others come in on idle, or sooner if a chip is hovered
   const warmAll = () => Object.keys(MODELS).forEach(loadFrame);
   $$('.fs').forEach((l) => l.addEventListener('pointerenter', warmAll, { once: true }));
 
-  /* The radios are the single source of truth: CSS styles the chips, swaps the
-     SVG frame and writes the caption; here we mirror the choice into WebGL. */
   const RADIO_SHAPE = { 'fs-aviator': 'aviator', 'fs-titanium': 'titanium', 'fs-sun': 'sun', 'fs-round': 'round' };
   $$('.fs-input').forEach((r) => r.addEventListener('change', () => {
     if (r.checked) setShape(RADIO_SHAPE[r.id]);
@@ -1018,12 +901,7 @@ async function initHero() {
     ptr.ty = (e.clientY / innerHeight) * 2 - 1;
   }, { passive: true });
 
-  // CSS drops the stage into its own short band below the copy under this
-  // width-or-aspect condition (see the hero rules in the matching media
-  // query in styles.css - keep the two in sync) - matched here so the frame
-  // re-centres in that band instead of following the side-by-side offset
-  // math, which assumes copy is beside it rather than above it.
-  const stackedHero = () => matchMedia('(max-width: 900px), (max-aspect-ratio: 4/5)').matches;
+  const stackedHero = () => matchMedia('(max-width: 960px)').matches;
   let camZ = 8.6;
 
   const resize = () => {
@@ -1032,16 +910,11 @@ async function initHero() {
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
     const stacked = stackedHero();
-    // the stacked band is short, so move the camera in a touch or the frame
-    // reads as small and distant inside it
-    camZ = stacked ? 7.2 : 8.6;
-    // the copy owns the left half of every non-stacked layout, so the frame
-    // always pushes clear of it there (never centres: a non-stacked layout
-    // this close to square would otherwise still land the frame on the text);
-    // once the layout stacks the copy runs full-width instead and it re-centres
-    pivot.position.x = stacked ? 0 : clamp((W / H) * 0.95, 1.05, 1.9);
 
-    // keep the two softboxes raking across wherever the frame ended up
+    camZ = stacked ? 7.2 : 8.6;
+
+    pivot.position.x = stacked ? 0 : clamp((W / H) * 0.95, 1.3, 1.9);
+
     const aim = pivot.position.x;
     boxTop.position.x = aim - 2.6;  boxTop.lookAt(aim, 0, 0);
     boxSide.position.x = aim + 3.4; boxSide.lookAt(aim, 0, 0);
@@ -1051,7 +924,6 @@ async function initHero() {
   let visible = true;
   new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0 }).observe(hero);
 
-  // intro: the frame swings in and settles once the curtain lifts
   let introT = 0;
   const easeOut = (x) => 1 - Math.pow(1 - x, 4);
 
@@ -1061,7 +933,7 @@ async function initHero() {
     const t = clock.getElapsedTime();
     ptr.x = lerp(ptr.x, ptr.tx, 0.05);
     ptr.y = lerp(ptr.y, ptr.ty, 0.05);
-    const sp = clamp(scrollY / innerHeight, 0, 1); // hero to next section
+    const sp = clamp(scrollY / innerHeight, 0, 1);
 
     if (document.body.classList.contains('ready')) introT = Math.min(1, introT + dt / 1.5);
     const intro = easeOut(introT);
@@ -1091,10 +963,8 @@ async function initHero() {
   if (reduce) { introT = 1; swapT = 1; render(); }
   else loop();
 
-  // hand over from the CSS frame only once a real frame is in the scene, so the
-  // stand-in never gets to flash in front of the reader
   loadFrame(current).then((model) => {
-    show(model, false);                        // null just leaves the built frame up
+    show(model, false);
     requestAnimationFrame(() => {
       canvas.style.opacity = '1';
       hero.classList.add('has-webgl');
@@ -1104,9 +974,6 @@ async function initHero() {
   });
 }
 
-/* ============================================================
-   boot
-   ============================================================ */
 function boot() {
   initLoader();
   initChromeHeight();
@@ -1116,7 +983,7 @@ function boot() {
   renderProducts();
   initCountdowns();
   initTabs();
-  initSplit();          // must run before the observer wires up
+  initSplit();
   initStatement();
   initParallax();
   initMagnetic();
