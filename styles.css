@@ -333,6 +333,7 @@ html:not(.js) .split > i { transform: none; }
 .fs-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 #fs-sun:checked      ~ .hero-stage .ef-shape[data-shape="sun"],
 #fs-aviator:checked  ~ .hero-stage .ef-shape[data-shape="aviator"],
+#fs-round:checked    ~ .hero-stage .ef-shape[data-shape="round"],
 #fs-titanium:checked ~ .hero-stage .ef-shape[data-shape="titanium"] { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -403,15 +404,18 @@ html:not(.js) .split > i { transform: none; }
 /* active chip + caption text, both selected by the radios (no JS needed) */
 #fs-sun:checked      ~ .hero-foot .fs[for="fs-sun"],
 #fs-aviator:checked  ~ .hero-foot .fs[for="fs-aviator"],
+#fs-round:checked    ~ .hero-foot .fs[for="fs-round"],
 #fs-titanium:checked ~ .hero-foot .fs[for="fs-titanium"] {
   background: var(--paper); border-color: var(--paper); color: var(--dark);
 }
 #fs-sun:checked      ~ .hero-foot .fs-caption::after { content: "The Bowery · 52 ▪ 20 ▪ 145"; }
 #fs-aviator:checked  ~ .hero-foot .fs-caption::after { content: "The Delancey · 58 ▪ 14 ▪ 140"; }
+#fs-round:checked    ~ .hero-foot .fs-caption::after { content: "The Mercer · 48 ▪ 21 ▪ 145"; }
 #fs-titanium:checked ~ .hero-foot .fs-caption::after { content: "The Canal · 54 ▪ 18 ▪ 145"; }
 
 #fs-sun:focus-visible      ~ .hero-foot .fs[for="fs-sun"],
 #fs-aviator:focus-visible  ~ .hero-foot .fs[for="fs-aviator"],
+#fs-round:focus-visible    ~ .hero-foot .fs[for="fs-round"],
 #fs-titanium:focus-visible ~ .hero-foot .fs[for="fs-titanium"] {
   outline: 2px solid var(--paper); outline-offset: 3px;
 }

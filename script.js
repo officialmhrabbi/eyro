@@ -583,11 +583,11 @@ async function initHero() {
   // "polished black" - flat black on a black stage reads as a silhouette.
   RectAreaLightUniformsLib.init();
 
-  const boxTop = new THREE.RectAreaLight(0xffffff, 5.5, 7.5, 2.2);
-  boxTop.position.set(-0.6, 3.1, 3.6); boxTop.lookAt(-0.5, 0, 0); scene.add(boxTop);
+  const boxTop = new THREE.RectAreaLight(0xffffff, 3.8, 5.5, 1.8);
+  boxTop.position.set(-2.6, 3.2, 3.2); scene.add(boxTop);
 
-  const boxSide = new THREE.RectAreaLight(0xffffff, 4, 1.3, 5.5);
-  boxSide.position.set(4.8, 0.3, 2.4); boxSide.lookAt(-0.5, 0, 0); scene.add(boxSide);
+  const boxSide = new THREE.RectAreaLight(0xffffff, 3.4, 1.1, 5);
+  boxSide.position.set(3.4, 0.2, 2.4); scene.add(boxSide);
 
   const key = new THREE.DirectionalLight(0xffffff, 1.1);  key.position.set(3, 4, 5);   scene.add(key);
   const rimLight = new THREE.SpotLight(0xffffff, 45, 24, Math.PI / 5, 0.5); rimLight.position.set(-4.6, 1.6, -3.4); scene.add(rimLight);
@@ -598,7 +598,7 @@ async function initHero() {
   // is what catches the softboxes and traces the curve of the front.
   const acetate = new THREE.MeshPhysicalMaterial({
     color: 0x08080a, roughness: 0.28, metalness: 0,
-    clearcoat: 1, clearcoatRoughness: 0.045,
+    clearcoat: 1, clearcoatRoughness: 0.1,
     envMapIntensity: 0.12,
   });
   const steel = new THREE.MeshStandardMaterial({ color: 0xd6d9dd, metalness: 1, roughness: 0.3, envMapIntensity: 0.9 });
@@ -768,8 +768,8 @@ async function initHero() {
   const rivetGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.05, 14);
   const hingeGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.2, 18);
 
-  function buildGlasses(kind = 'round') {
-    const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.round)();
+  function buildGlasses(kind = 'sun') {
+    const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.sun)();
     const g = new THREE.Group();
     const cx = halfW + 0.16;          // rim centre: half the bridge span out
     const endX = cx + halfW;          // outer edge of the front
@@ -888,12 +888,15 @@ async function initHero() {
      the model's own materials away for the acetate/glass above - usually worth
      trying, since marketplace models tend to ship with flat plastic shading. */
   const MODELS = {
-    sun:      { url: 'models/stylish_modern_high_quality_sunglasses.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    sun:      { url: 'models/stylish_modern_high_quality_sunglasses.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'ours' },
     aviator:  { url: 'models/aviator_glasses.glb',                        rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    round:    { url: 'models/eyewear_specs.glb',                          rotation: [0, Math.PI / 2, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
     titanium: { url: 'models/titanium_frame_glass.glb',                   rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
   };
-  const FRONT_SPAN = 4.6;   // the procedural front is about this wide, so a
+  const FRONT_SPAN = 4.3;   // the procedural front is about this wide, so a
                             // model auto-scaled to match drops straight in
+  const MAX_RADIUS = 2.6;  // ...unless that would make a deep model clip once
+                            // the hero rotates it, which the radius cap prevents
 
   const gltfLoader = new GLTFLoader()
     .setDRACOLoader(new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/'))
@@ -936,7 +939,10 @@ async function initHero() {
     const size = new THREE.Vector3(), mid = new THREE.Vector3();
     box.getSize(size); box.getCenter(mid);
     root.position.sub(mid);                    // centre before scaling
-    g.scale.setScalar((FRONT_SPAN / Math.max(size.x, 1e-4)) * cfg.scale);
+    // match the front widths so the three frames read at one size, but never at
+    // the cost of a temple swinging out of shot when the hero turns the model
+    const reach = box.getBoundingSphere(new THREE.Sphere()).radius;
+    g.scale.setScalar(Math.min(FRONT_SPAN / Math.max(size.x, 1e-4), MAX_RADIUS / Math.max(reach, 1e-4)) * cfg.scale);
     g.position.fromArray(cfg.lift);
     g.rotation.x = -0.13;                      // same pantoscopic tilt as the built frame
 
@@ -955,7 +961,7 @@ async function initHero() {
       const cfg = MODELS[kind];
       const p = (!cfg ? Promise.resolve(null) : gltfLoader.loadAsync(cfg.url)
         .then((gltf) => fitModel(gltf.scene, cfg))
-        .catch(() => null))      // missing or broken: the built frame stands in
+        .catch((err) => { console.warn('hero: could not load ' + cfg.url, err); return null; }))
         .then((m) => { loaded.set(kind, m); inflight.delete(kind); return m; });
       inflight.set(kind, p);
     }
@@ -985,7 +991,7 @@ async function initHero() {
      the procedural stand-in mid-swap reads as a glitch, and these files are big
      enough that the flash would last long enough to notice. */
   async function setShape(kind) {
-    if (kind === current || !SHAPES[kind]) return;
+    if (kind === current || !MODELS[kind]) return;
     current = kind;
     const mine = ++swapId;
     const model = await loadFrame(kind);
@@ -996,11 +1002,11 @@ async function initHero() {
   // the three models are ~18MB between them, so only the one on show is fetched
   // up front; the others come in on idle, or sooner if a chip is hovered
   const warmAll = () => Object.keys(MODELS).forEach(loadFrame);
-  $('.fs').forEach((l) => l.addEventListener('pointerenter', warmAll, { once: true }));
+  $$('.fs').forEach((l) => l.addEventListener('pointerenter', warmAll, { once: true }));
 
   /* The radios are the single source of truth: CSS styles the chips, swaps the
      SVG frame and writes the caption; here we mirror the choice into WebGL. */
-  const RADIO_SHAPE = { 'fs-sun': 'sun', 'fs-aviator': 'aviator', 'fs-titanium': 'titanium' };
+  const RADIO_SHAPE = { 'fs-sun': 'sun', 'fs-aviator': 'aviator', 'fs-round': 'round', 'fs-titanium': 'titanium' };
   $$('.fs-input').forEach((r) => r.addEventListener('change', () => {
     if (r.checked) setShape(RADIO_SHAPE[r.id]);
   }));
@@ -1020,7 +1026,12 @@ async function initHero() {
     composer.setSize(W, H);
     // the copy owns the left half on a wide layout, so push the frame clear of
     // it; once the layout narrows there is nothing to clear and it re-centres
-    pivot.position.x = W / H > 1.15 ? clamp((W / H) * 1.05, 1.2, 2.2) : 0;
+    pivot.position.x = W / H > 1.15 ? clamp((W / H) * 0.95, 1.05, 1.9) : 0;
+
+    // keep the two softboxes raking across wherever the frame ended up
+    const aim = pivot.position.x;
+    boxTop.position.x = aim - 2.6;  boxTop.lookAt(aim, 0, 0);
+    boxSide.position.x = aim + 3.4; boxSide.lookAt(aim, 0, 0);
   };
   addEventListener('resize', resize);
 
@@ -1048,7 +1059,7 @@ async function initHero() {
     pivot.rotation.x = -0.02 + Math.cos(t * 0.35) * 0.05 + ptr.y * 0.18;
     pivot.position.y = 0.12 + Math.sin(t * 0.6) * 0.05 - sp * 0.9;
     pivot.position.z = -sp * 1.6;
-    pivot.scale.setScalar(0.86 * (0.86 + 0.14 * intro) * (0.9 + 0.1 * swap));
+    pivot.scale.setScalar(0.82 * (0.86 + 0.14 * intro) * (0.9 + 0.1 * swap));
 
     camera.position.z = 8.6 + sp * 2.4;
     camera.position.x = ptr.x * 0.3;

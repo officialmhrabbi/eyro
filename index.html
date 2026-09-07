@@ -163,6 +163,7 @@
            all. CSS drives the SVG frame; script.js mirrors it into WebGL. -->
       <input class="fs-input" type="radio" name="fshape" id="fs-sun" checked>
       <input class="fs-input" type="radio" name="fshape" id="fs-aviator">
+      <input class="fs-input" type="radio" name="fshape" id="fs-round">
       <input class="fs-input" type="radio" name="fshape" id="fs-titanium">
 
       <div class="hero-stage" id="hero-stage" aria-hidden="true">
@@ -183,6 +184,10 @@
               <div class="ef-shape" data-shape="aviator">
                 <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-aviator"/></svg>
                 <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-aviator"/></svg>
+              </div>
+              <div class="ef-shape" data-shape="round">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
               </div>
               <div class="ef-shape" data-shape="titanium">
                 <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-thin"/></svg>
@@ -228,6 +233,7 @@
           <div class="fs-row" role="group" aria-label="Preview frame shape">
             <label class="fs" for="fs-sun"     >Sunglasses</label>
             <label class="fs" for="fs-aviator" >Aviator</label>
+            <label class="fs" for="fs-round"    >Round</label>
             <label class="fs" for="fs-titanium">Titanium</label>
           </div>
         </div>
