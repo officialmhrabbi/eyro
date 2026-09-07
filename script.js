@@ -232,29 +232,36 @@ function initSplit() {
   });
 }
 
-/* ---------- section reveal: each section rises in as it enters view ---- */
+/* ---------- section reveal ----------
+   When a section first enters view it moves in as a block AND its
+   [data-reveal] children cascade, so the whole section reads as one
+   choreographed motion rather than parts fading in independently.       */
 function initSectionReveal() {
   const secs = $$('main > section:not(.hero), .site-footer');
   if (!secs.length) return;
 
+  const play = (s) => {
+    if (s.classList.contains('in-view')) return;
+    s.classList.add('in-view');
+    $$('[data-reveal]', s).forEach((el) => el.classList.add('in'));
+  };
+
   if (reduce || !('IntersectionObserver' in window)) {
-    secs.forEach((s) => s.classList.add('in-view'));
+    secs.forEach(play);
     return;
   }
   const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.06, rootMargin: '0px 0px -10% 0px' });
+    entries.forEach((e) => { if (e.isIntersecting) { play(e.target); io.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -12% 0px' });
   secs.forEach((s) => io.observe(s));
 
-  // failsafes: anything already on screen, then a hard sweep
+  // failsafes: whatever is already on screen, then a hard sweep
   const near = () => secs.forEach((s) => {
-    if (s.getBoundingClientRect().top < innerHeight * 0.95) s.classList.add('in-view');
+    if (s.getBoundingClientRect().top < innerHeight * 0.95) play(s);
   });
   addEventListener('load', near);
-  setTimeout(near, 900);
-  setTimeout(() => secs.forEach((s) => s.classList.add('in-view')), 5000);
+  setTimeout(near, 800);
+  setTimeout(() => secs.forEach(play), 5000);
 }
 
 /* ---------- magnetic buttons ---------- */
@@ -423,7 +430,10 @@ function initGlassArt() {
   if (sg) sg.style.backgroundImage = `url("${glassesDataURI('browline', '#f4f4f2')}")`;
 }
 
-/* ---------- reveal on scroll ---------- */
+/* ---------- reveal on scroll ----------
+   Sets the --i stagger index on every [data-reveal], then observes only the
+   handful that live outside a tracked section (initSectionReveal drives the
+   rest, so their reveal stays in step with the section's own motion).     */
 function initReveals() {
   const els = $$('[data-reveal]');
   els.forEach((el) => {
@@ -431,7 +441,10 @@ function initReveals() {
     if (sibs.length > 1) el.style.setProperty('--i', sibs.indexOf(el));
   });
 
-  const targets = new Set(els.filter((e) => !e.closest('.hero')));
+  const targets = new Set(els.filter((e) =>
+    !e.closest('.hero') && !e.closest('main > section') && !e.closest('.site-footer')
+  ));
+  if (!targets.size) return;
   if (reduce || !('IntersectionObserver' in window)) {
     targets.forEach((e) => e.classList.add('in'));
     return;
@@ -529,6 +542,8 @@ async function initHero() {
   }
 
   let THREE, RoomEnvironment, EffectComposer, RenderPass, UnrealBloomPass, OutputPass;
+  let RectAreaLightUniformsLib, mergeGeometries, toCreasedNormals;
+  let GLTFLoader, DRACOLoader, MeshoptDecoder;
   try {
     THREE = await import('three');
     ({ RoomEnvironment }  = await import('three/addons/environments/RoomEnvironment.js'));
@@ -536,6 +551,11 @@ async function initHero() {
     ({ RenderPass }       = await import('three/addons/postprocessing/RenderPass.js'));
     ({ UnrealBloomPass }  = await import('three/addons/postprocessing/UnrealBloomPass.js'));
     ({ OutputPass }       = await import('three/addons/postprocessing/OutputPass.js'));
+    ({ RectAreaLightUniformsLib } = await import('three/addons/lights/RectAreaLightUniformsLib.js'));
+    ({ mergeGeometries, toCreasedNormals } = await import('three/addons/utils/BufferGeometryUtils.js'));
+    ({ GLTFLoader }     = await import('three/addons/loaders/GLTFLoader.js'));
+    ({ DRACOLoader }    = await import('three/addons/loaders/DRACOLoader.js'));
+    ({ MeshoptDecoder } = await import('three/addons/libs/meshopt_decoder.module.js'));
   } catch (err) {
     console.warn('Three.js unavailable, using static hero:', err);
     hero.classList.add('no-3d');
@@ -549,7 +569,7 @@ async function initHero() {
   renderer.setSize(W, H, false);
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.0;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
@@ -558,25 +578,38 @@ async function initHero() {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-  // lights (bright pockets for the bloom pass to catch), all neutral white
-  const key = new THREE.DirectionalLight(0xffffff, 2.2);  key.position.set(3, 4, 5);   scene.add(key);
-  const rim = new THREE.SpotLight(0xffffff, 90, 22, Math.PI / 5, 0.4); rim.position.set(-4, 1.5, -3); scene.add(rim);
-  const glow = new THREE.PointLight(0xffffff, 22, 14);    glow.position.set(0, 0, -2); scene.add(glow);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+  // lights: a dark studio with two softboxes, which is how black acetate is
+  // actually shot. the streaks they leave are the only thing that reads as
+  // "polished black" - flat black on a black stage reads as a silhouette.
+  RectAreaLightUniformsLib.init();
+
+  const boxTop = new THREE.RectAreaLight(0xffffff, 5.5, 7.5, 2.2);
+  boxTop.position.set(-0.6, 3.1, 3.6); boxTop.lookAt(-0.5, 0, 0); scene.add(boxTop);
+
+  const boxSide = new THREE.RectAreaLight(0xffffff, 4, 1.3, 5.5);
+  boxSide.position.set(4.8, 0.3, 2.4); boxSide.lookAt(-0.5, 0, 0); scene.add(boxSide);
+
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);  key.position.set(3, 4, 5);   scene.add(key);
+  const rimLight = new THREE.SpotLight(0xffffff, 45, 24, Math.PI / 5, 0.5); rimLight.position.set(-4.6, 1.6, -3.4); scene.add(rimLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.13));
 
   /* ---- materials (shared across frame swaps) ---- */
+  // polished acetate: a near-black base under a mirror clearcoat. the clearcoat
+  // is what catches the softboxes and traces the curve of the front.
   const acetate = new THREE.MeshPhysicalMaterial({
-    color: 0x090909, roughness: 0.34, metalness: 0,
-    clearcoat: 1, clearcoatRoughness: 0.3,
-    sheen: 0.4, sheenColor: 0x242424,
-    envMapIntensity: 0.22,     // keep the acetate reading black, not chrome
+    color: 0x08080a, roughness: 0.28, metalness: 0,
+    clearcoat: 1, clearcoatRoughness: 0.045,
+    envMapIntensity: 0.12,
   });
-  const steel = new THREE.MeshStandardMaterial({ color: 0xececec, metalness: 1, roughness: 0.14, envMapIntensity: 1.5 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0xd6d9dd, metalness: 1, roughness: 0.3, envMapIntensity: 0.9 });
+  // real glass. transmission does all the work here, so opacity stays 1 and
+  // transparent stays off - mixing the two is what turns lenses into smoke.
   const lensMat = new THREE.MeshPhysicalMaterial({
-    color: 0x0f0f0f, roughness: 0.05, metalness: 0,
-    transmission: 1, thickness: 0.8, ior: 1.5,
-    transparent: true, opacity: 0.5,
-    attenuationColor: 0xffffff, attenuationDistance: 3, envMapIntensity: 1.2,
+    color: 0xffffff, roughness: 0.06, metalness: 0,
+    transmission: 1, thickness: 0.6, ior: 1.52,
+    transparent: false, opacity: 1,
+    attenuationColor: 0x8b9aa0, attenuationDistance: 0.7,
+    clearcoat: 0, envMapIntensity: 0.35, specularIntensity: 0.6,
   });
 
   // rounded rectangle traced onto a Shape or Path
@@ -594,8 +627,86 @@ async function initHero() {
     return p;
   }
 
-  /* Each frame shape is an extruded acetate slab with a lens-shaped hole,
-     which reads far more like a real frame than a swept tube would. */
+  /* ---- face form ----
+     A frame front is cut flat out of an acetate sheet, then heated and bent
+     around the face. Skipping that bend is what made the old rims read as two
+     washers lying on a table, so every front part is cut flat, merged into one
+     piece, and then wrapped onto this cylinder. */
+  const FACE_R = 7;
+
+  function bend(x, y, z, out = new THREE.Vector3()) {
+    const a = x / FACE_R, r = FACE_R + z;
+    return out.set(r * Math.sin(a), y, r * Math.cos(a) - FACE_R);
+  }
+
+  // wrap a flat extruded front and taper its depth: acetate is thickest through
+  // the brow and thins out toward the bottom rim and the end pieces
+  function formFront(geo) {
+    const pos = geo.attributes.position;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i);
+      const byY = 1 - 0.26 * clamp((0.55 - y) / 1.5, 0, 1);
+      const byX = 1 - 0.2 * clamp((Math.abs(x) - 1.45) / 0.95, 0, 1);
+      bend(x, y, pos.getZ(i) * byY * byX, v);
+      pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    pos.needsUpdate = true;
+    const out = toCreasedNormals(geo, 0.9);   // ~52deg: keeps the bevels crisp
+    if (out !== geo) geo.dispose();
+    return out;
+  }
+
+  // 16-point rounded-rectangle cross-section for the temples
+  const BAR = Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+    return [Math.sign(c) * Math.abs(c) ** 0.45, Math.sign(s) * Math.abs(s) ** 0.45];
+  });
+
+  /* Sweep that cross-section down a curve with an up-aligned frame, tapering as
+     it goes: an acetate temple is a flat bar that narrows toward the ear, not
+     the round wire the old build swept. */
+  function barGeometry(curve, steps, wAt, tAt) {
+    const N = BAR.length, UP = new THREE.Vector3(0, 1, 0);
+    const pos = [], idx = [];
+    const p = new THREE.Vector3(), tan = new THREE.Vector3();
+    const side = new THREE.Vector3(), up = new THREE.Vector3(), q = new THREE.Vector3();
+
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps;
+      curve.getPoint(u, p);
+      curve.getTangent(u, tan);
+      side.crossVectors(UP, tan).normalize();   // right-handed with tan
+      up.crossVectors(tan, side).normalize();
+      const w = wAt(u), t = tAt(u);
+      for (const [cu, cv] of BAR) {
+        q.copy(p).addScaledVector(side, cu * t).addScaledVector(up, cv * w);
+        pos.push(q.x, q.y, q.z);
+      }
+    }
+    for (let i = 0; i < steps; i++) for (let j = 0; j < N; j++) {
+      const a = i * N + j, b = i * N + (j + 1) % N;
+      idx.push(a, b, a + N, b, b + N, a + N);
+    }
+    const capA = pos.length / 3;
+    curve.getPoint(0, p); pos.push(p.x, p.y, p.z);
+    curve.getPoint(1, p); pos.push(p.x, p.y, p.z);
+    for (let j = 0; j < N; j++) {
+      idx.push(capA, (j + 1) % N, j);
+      idx.push(capA + 1, steps * N + j, steps * N + (j + 1) % N);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const out = toCreasedNormals(g, 0.9);
+    if (out !== g) g.dispose();
+    return out;
+  }
+
+  /* Each shape is the flat cut of one rim, plus the numbers the bridge, end
+     pieces and hinges get placed from. holeHalfW is where the bridge has to
+     land so it meets the rim on solid material instead of over the lens. */
   const SHAPES = {
     round: () => {
       const outer = new THREE.Shape();
@@ -605,84 +716,134 @@ async function initHero() {
       outer.holes.push(hole);
       const lens = new THREE.Shape();
       lens.absarc(0, 0, 0.89, 0, Math.PI * 2, false);
-      return { outer, lens, halfW: 1.06, browY: 0.72 };
+      return { outer, lens, halfW: 1.06, holeHalfW: 0.88, hingeY: 0.26,
+               bridge: { top: 0.52, side: -0.14, nose: 0.14 } };
     },
     square: () => {
       const outer = roundedRect(new THREE.Shape(), 2.14, 1.74, 0.34);
-      const hole = roundedRect(new THREE.Path(), 1.82, 1.42, 0.24);
+      const hole  = roundedRect(new THREE.Path(),  1.82, 1.42, 0.24);
       outer.holes.push(hole);
-      const lens = roundedRect(new THREE.Shape(), 1.83, 1.43, 0.24);
-      return { outer, lens, halfW: 1.07, browY: 0.6 };
+      const lens  = roundedRect(new THREE.Shape(), 1.83, 1.43, 0.24);
+      return { outer, lens, halfW: 1.07, holeHalfW: 0.91, hingeY: 0.22,
+               bridge: { top: 0.62, side: -0.08, nose: 0.14 } };
     },
     browline: () => {
-      // hole sits low, leaving a heavy brow across the top
-      const outer = roundedRect(new THREE.Shape(), 2.14, 1.7, 0.3);
-      const hole = roundedRect(new THREE.Path(), 1.86, 1.24, 0.26, -0.16);
+      // hole sits low, leaving a heavy brow; the bridge runs across at brow
+      // height so the bar reads as one continuous piece, which is the shape
+      const outer = roundedRect(new THREE.Shape(), 2.14, 1.7, 0.2);
+      const hole  = roundedRect(new THREE.Path(),  1.86, 1.24, 0.26, -0.16);
       outer.holes.push(hole);
-      const lens = roundedRect(new THREE.Shape(), 1.87, 1.25, 0.26, -0.16);
-      return { outer, lens, halfW: 1.07, browY: 0.6 };
+      const lens  = roundedRect(new THREE.Shape(), 1.87, 1.25, 0.26, -0.16);
+      return { outer, lens, halfW: 1.07, holeHalfW: 0.93, hingeY: 0.28,
+               bridge: { top: 0.78, side: 0.12, nose: 0.3 } };
     },
   };
 
   const EXTRUDE = {
-    depth: 0.14, curveSegments: 44,
-    bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.035, bevelSegments: 4,
+    depth: 0.2, curveSegments: 40,
+    bevelEnabled: true, bevelThickness: 0.045, bevelSize: 0.05, bevelSegments: 5,
+  };
+  const LENS_EXTRUDE = {
+    depth: 0.09, curveSegments: 40,
+    bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2,
   };
 
+  // saddle bridge, cut from the same sheet at the same depth and overlapping
+  // both rims, so front + bridge merge into the one piece a real front is
+  function bridgeShape(cx, holeHalfW, b) {
+    const x = cx - holeHalfW - 0.02;
+    const p = new THREE.Shape();
+    p.moveTo(-x, b.top);
+    p.lineTo(x, b.top);
+    p.lineTo(x, b.side);
+    p.bezierCurveTo(x * 0.78, b.side, x * 0.62, b.nose, 0, b.nose);
+    p.bezierCurveTo(-x * 0.62, b.nose, -x * 0.78, b.side, -x, b.side);
+    p.closePath();
+    return p;
+  }
+
+  const rivetGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.05, 14);
+  const hingeGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.2, 18);
+
   function buildGlasses(kind = 'round') {
-    const { outer, lens, halfW, browY } = (SHAPES[kind] || SHAPES.round)();
+    const { outer, lens, halfW, holeHalfW, hingeY, bridge } = (SHAPES[kind] || SHAPES.round)();
     const g = new THREE.Group();
+    const cx = halfW + 0.16;          // rim centre: half the bridge span out
+    const endX = cx + halfW;          // outer edge of the front
 
-    const rimGeo = new THREE.ExtrudeGeometry(outer, EXTRUDE);
-    rimGeo.translate(0, 0, -EXTRUDE.depth / 2);
-    const lensGeo = new THREE.ExtrudeGeometry(lens, { depth: 0.06, curveSegments: 44, bevelEnabled: false });
-    lensGeo.translate(0, 0, -0.03);
+    /* ---- the front: cut flat as one piece, then wrapped ---- */
+    const rimCut = new THREE.ExtrudeGeometry(outer, EXTRUDE);
+    const tabCut = new THREE.ExtrudeGeometry(roundedRect(new THREE.Shape(), 0.3, 0.34, 0.09), EXTRUDE);
+    const parts = [
+      rimCut.clone().translate(-cx, 0, 0),
+      rimCut.clone().translate(cx, 0, 0),
+      new THREE.ExtrudeGeometry(bridgeShape(cx, holeHalfW, bridge), EXTRUDE),
+      tabCut.clone().translate(-(endX - 0.08), hingeY, 0),
+      tabCut.clone().translate(endX - 0.08, hingeY, 0),
+    ];
+    rimCut.dispose(); tabCut.dispose();
 
-    const gap = halfW + 0.16;          // half the bridge span
-    for (const side of [-1, 1]) {
-      const x = side * gap;
+    let frontGeo = mergeGeometries(parts, false);
+    parts.forEach((p) => p.dispose());
+    frontGeo.translate(0, 0, -EXTRUDE.depth / 2);
+    frontGeo = formFront(frontGeo);
+    g.add(new THREE.Mesh(frontGeo, acetate));
 
-      const rim = new THREE.Mesh(rimGeo, acetate);
-      rim.position.x = x;
-      g.add(rim);
+    /* ---- lenses: same cut, same wrap, so they sit in the groove ---- */
+    const lensCut = new THREE.ExtrudeGeometry(lens, LENS_EXTRUDE);
+    const lensParts = [lensCut.clone().translate(-cx, 0, 0), lensCut.clone().translate(cx, 0, 0)];
+    lensCut.dispose();
+    const lensGeo = mergeGeometries(lensParts, false);
+    lensParts.forEach((p) => p.dispose());
+    lensGeo.translate(0, 0, -LENS_EXTRUDE.depth / 2);
+    const lp = lensGeo.attributes.position, lv = new THREE.Vector3();
+    for (let i = 0; i < lp.count; i++) {
+      bend(lp.getX(i), lp.getY(i), lp.getZ(i), lv);
+      lp.setXYZ(i, lv.x, lv.y, lv.z);
+    }
+    lp.needsUpdate = true;
+    lensGeo.computeVertexNormals();
+    g.add(new THREE.Mesh(lensGeo, lensMat));
 
-      const l = new THREE.Mesh(lensGeo, lensMat);
-      l.position.x = x;
-      g.add(l);
+    /* ---- hinges, rivets and temples, placed on the wrapped surface ---- */
+    const face = EXTRUDE.depth / 2 * 0.86;
+    const splay = 0.35 * endX / FACE_R;    // temples splay a little, not the full wrap
+    const Y = new THREE.Vector3(0, 1, 0);
 
-      const hingeX = side * (gap + halfW - 0.09);
-      const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.2, 20), steel);
-      hinge.rotation.z = Math.PI / 2;
-      hinge.position.set(hingeX, browY * 0.42, 0);
+    for (const s of [-1, 1]) {
+      const theta = s * endX / FACE_R;
+      const nrm = new THREE.Vector3(Math.sin(theta), 0, Math.cos(theta));
+
+      // two rivets set into the end piece, the classic acetate tell
+      for (const k of [-1, 1]) {
+        const dot = new THREE.Mesh(rivetGeo, steel);
+        bend(s * (endX - 0.09), hingeY + k * 0.075, face, dot.position);
+        dot.quaternion.setFromUnitVectors(Y, nrm);
+        g.add(dot);
+      }
+
+      const hinge = new THREE.Mesh(hingeGeo, steel);
+      bend(s * (endX + 0.01), hingeY, -0.03, hinge.position);
       g.add(hinge);
 
-      // temple arm sweeping back and down behind the ear
+      // temple: back and slightly out, then down and in behind the ear
+      const h = bend(s * (endX - 0.01), hingeY, -0.02, new THREE.Vector3());
+      const back = new THREE.Vector3(s * Math.sin(splay), 0, -Math.cos(splay));
+      const lat  = new THREE.Vector3(s * Math.cos(splay), 0, s * Math.sin(splay));
+      const at = (d, dy, dl) => h.clone().addScaledVector(back, d).addScaledVector(Y, dy).addScaledVector(lat, dl);
       const arm = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(hingeX, browY * 0.42, 0),
-        new THREE.Vector3(side * (Math.abs(hingeX) + 0.3), browY * 0.45, -0.22),
-        new THREE.Vector3(side * (Math.abs(hingeX) + 0.48), browY * 0.3, -1.5),
-        new THREE.Vector3(side * (Math.abs(hingeX) + 0.42), -0.12, -2.5),
-        new THREE.Vector3(side * (Math.abs(hingeX) + 0.34), -0.46, -2.92),
+        at(-0.04, 0, 0), at(0.85, -0.02, 0.01), at(1.85, -0.1, 0),
+        at(2.5, -0.44, -0.05), at(2.78, -0.82, -0.13),
       ]);
-      g.add(new THREE.Mesh(new THREE.TubeGeometry(arm, 48, 0.05, 14, false), steel));
-
-      const pad = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), steel);
-      pad.position.set(side * 0.26, -0.1, 0.17);
-      g.add(pad);
+      g.add(new THREE.Mesh(
+        barGeometry(arm, 64, (u) => lerp(0.115, 0.055, u ** 1.5), (u) => lerp(0.055, 0.04, u)),
+        acetate,
+      ));
     }
 
-    // bridge across the top of the two rims
-    const bx = gap - halfW + 0.14;
-    const bridge = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-bx - 0.16, browY * 0.5, 0),
-      new THREE.Vector3(-bx * 0.5, browY * 0.78, 0.04),
-      new THREE.Vector3(bx * 0.5, browY * 0.78, 0.04),
-      new THREE.Vector3(bx + 0.16, browY * 0.5, 0),
-    ]);
-    g.add(new THREE.Mesh(new THREE.TubeGeometry(bridge, 32, 0.06, 12, false), steel));
-
-    g.rotation.x = -0.1;
+    g.rotation.x = -0.13;             // pantoscopic tilt
     g.position.x = -0.5;
+    g.userData.procedural = true;
     return g;
   }
 
@@ -709,26 +870,111 @@ async function initHero() {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.34, 0.6, 0.9));
+  // just enough bloom to lift the specular streaks; the old radius smeared the
+  // whole frame into a halo and cost it its silhouette
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.16, 0.35, 0.86));
   composer.addPass(new OutputPass());
 
-  /* ---- frame switcher: dispose the old model, swap in the new one ---- */
+  /* ---- real frame models ----
+     Drop a .glb in models/ and it takes over from the procedural build for
+     that shape. Anything missing or broken falls back to the built frame, so
+     the hero never depends on an asset being present.
+
+     Once you can see a file, tune it here: `rotation` orients it so the front
+     faces the camera (+Z) with the temples running back, `scale` nudges the
+     auto-fit, `lift` shifts it after centring, and `materials: 'ours'` throws
+     the model's own materials away for the acetate/glass above - usually worth
+     trying, since marketplace models tend to ship with flat plastic shading. */
+  const MODELS = {
+    round:    { url: 'models/round.glb',    rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    square:   { url: 'models/square.glb',   rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    browline: { url: 'models/browline.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+  };
+  const FRONT_SPAN = 4.6;   // the procedural front is about this wide, so a
+                            // model auto-scaled to match drops straight in
+
+  const gltfLoader = new GLTFLoader()
+    .setDRACOLoader(new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/'))
+    .setMeshoptDecoder(MeshoptDecoder);
+
+  const matsOf = (m) => (Array.isArray(m) ? m : [m]);
+
+  // names are the only clue a gltf gives us about which part is which
+  function reskin(root) {
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+      const name = `${o.name} ${matsOf(o.material).map((m) => m.name).join(' ')}`.toLowerCase();
+      if (/lens|glass/.test(name)) o.material = lensMat;
+      else if (/hinge|screw|metal|steel|rivet|wire/.test(name)) o.material = steel;
+      else o.material = acetate;
+    });
+  }
+
+  /* Centre the model, scale it to the same span as the procedural front and
+     hand back something the swapper can treat like any other frame. */
+  function fitModel(root, cfg) {
+    const g = new THREE.Group();
+    root.rotation.fromArray(cfg.rotation);
+    g.add(root);
+
+    const box = new THREE.Box3().setFromObject(g);
+    const size = new THREE.Vector3(), mid = new THREE.Vector3();
+    box.getSize(size); box.getCenter(mid);
+    root.position.sub(mid);                    // centre before scaling
+    g.scale.setScalar((FRONT_SPAN / Math.max(size.x, 1e-4)) * cfg.scale);
+    g.position.set(-0.5 + cfg.lift[0], cfg.lift[1], cfg.lift[2]);
+    g.rotation.x = -0.13;                      // same pantoscopic tilt as the built frame
+
+    if (cfg.materials === 'ours') reskin(g);
+    else g.traverse((o) => {
+      if (o.isMesh) matsOf(o.material).forEach((m) => { if ('envMapIntensity' in m) m.envMapIntensity = 1; });
+    });
+    return g;
+  }
+
+  const loaded = new Map();      // kind -> group, or null once we know there is no file
+  function loadFrame(kind) {
+    const cfg = MODELS[kind];
+    if (!cfg) return Promise.resolve(null);
+    return gltfLoader.loadAsync(cfg.url)
+      .then((gltf) => fitModel(gltf.scene, cfg))
+      .catch(() => null)         // no file yet, or a broken one: keep the built frame
+      .then((m) => { loaded.set(kind, m); return m; });
+  }
+
+  /* ---- frame switcher: the built frame holds the spot until a model lands ---- */
   let swapT = 1;          // 0..1, drives the scale punch on swap
   let current = 'round';
+  let swapId = 0;
 
   function disposeGroup(group) {
+    if (!group.userData.procedural) return;    // loaded models get reused, not freed
     group.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
   }
 
-  function setShape(kind) {
-    if (kind === current || !SHAPES[kind]) return;
-    current = kind;
-    swapT = 0;
+  function show(next, punch = true) {
+    if (!next || next === glasses) return;
+    if (punch) swapT = 0;
     pivot.remove(glasses);
     disposeGroup(glasses);
-    glasses = buildGlasses(kind);
+    glasses = next;
     pivot.add(glasses);
   }
+
+  async function setShape(kind) {
+    if (kind === current || !SHAPES[kind]) return;
+    current = kind;
+    const mine = ++swapId;
+    if (loaded.has(kind)) { show(loaded.get(kind) || buildGlasses(kind)); return; }
+    show(buildGlasses(kind));                  // built frame first, so the swap is instant
+    const model = await loadFrame(kind);
+    if (model && mine === swapId) show(model, false);
+  }
+
+  // warm all three so later swaps never wait on the network
+  Object.keys(MODELS).forEach((k) => {
+    loadFrame(k).then((m) => { if (m && k === current && swapId === 0) show(m, false); });
+  });
 
   /* The radios are the single source of truth: CSS styles the chips, swaps the
      SVG frame and writes the caption; here we mirror the choice into WebGL. */
@@ -777,7 +1023,7 @@ async function initHero() {
     pivot.rotation.x = -0.02 + Math.cos(t * 0.35) * 0.05 + ptr.y * 0.18;
     pivot.position.y = 0.12 + Math.sin(t * 0.6) * 0.05 - sp * 0.9;
     pivot.position.z = -sp * 1.6;
-    pivot.scale.setScalar(0.95 * (0.86 + 0.14 * intro) * (0.9 + 0.1 * swap));
+    pivot.scale.setScalar(0.86 * (0.86 + 0.14 * intro) * (0.9 + 0.1 * swap));
 
     camera.position.z = 8.6 + sp * 2.4;
     camera.position.x = ptr.x * 0.3;
