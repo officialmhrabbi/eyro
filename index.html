@@ -88,6 +88,31 @@
         <path d="M326 104c8 40 32 58 51 58" stroke-width="3" opacity=".32"/>
       </g>
     </g>
+
+    <g id="sh-aviator" fill="none" stroke="currentColor" stroke-width="15">
+      <path d="M72 64h148c-2 44-24 104-74 104S74 108 72 64Z"/>
+      <path d="M300 64h148c-2 44-24 104-74 104s-72-60-74-104Z"/>
+      <path d="M220 74c14-8 32-11 40-11s26 3 40 11" stroke-width="12" stroke-linecap="round"/>
+      <path d="M60 52h176M284 52h176" stroke-width="10" stroke-linecap="round"/>
+      <rect x="44" y="72" width="20" height="16" rx="6" fill="currentColor" stroke="none"/>
+      <rect x="456" y="72" width="20" height="16" rx="6" fill="currentColor" stroke="none"/>
+      <g class="hl" stroke="#f4f4f2" fill="none" stroke-linecap="round">
+        <path d="M86 76c2 26 10 50 24 66" stroke-width="5"/>
+        <path d="M314 76c2 26 10 50 24 66" stroke-width="5"/>
+      </g>
+    </g>
+
+    <g id="sh-thin" fill="none" stroke="currentColor" stroke-width="10">
+      <rect x="72" y="56" width="152" height="96" rx="18"/>
+      <rect x="296" y="56" width="152" height="96" rx="18"/>
+      <path d="M224 82c14-8 34-12 48-12s34 4 48 12" stroke-width="8" stroke-linecap="round"/>
+      <rect x="52" y="76" width="20" height="14" rx="5" fill="currentColor" stroke="none"/>
+      <rect x="448" y="76" width="20" height="14" rx="5" fill="currentColor" stroke="none"/>
+      <g class="hl" stroke="#f4f4f2" fill="none" stroke-linecap="round">
+        <path d="M82 90V76a20 20 0 0 1 20-20h34" stroke-width="5"/>
+        <path d="M306 90V76a20 20 0 0 1 20-20h34" stroke-width="5"/>
+      </g>
+    </g>
   </defs></svg>
 
   <!-- ===== Announcement ===== -->
@@ -136,9 +161,9 @@
     <section class="hero" aria-labelledby="hero-title">
       <!-- Frame shape is held in radios so the switcher works with no JS at
            all. CSS drives the SVG frame; script.js mirrors it into WebGL. -->
-      <input class="fs-input" type="radio" name="fshape" id="fs-round" checked>
-      <input class="fs-input" type="radio" name="fshape" id="fs-square">
-      <input class="fs-input" type="radio" name="fshape" id="fs-brow">
+      <input class="fs-input" type="radio" name="fshape" id="fs-sun" checked>
+      <input class="fs-input" type="radio" name="fshape" id="fs-aviator">
+      <input class="fs-input" type="radio" name="fshape" id="fs-titanium">
 
       <div class="hero-stage" id="hero-stage" aria-hidden="true">
         <canvas id="scene"></canvas>
@@ -151,17 +176,17 @@
             <div class="ef-body">
               <span class="ef-glow"></span>
 
-              <div class="ef-shape" data-shape="round">
-                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
-                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
-              </div>
-              <div class="ef-shape" data-shape="square">
+              <div class="ef-shape" data-shape="sun">
                 <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-square"/></svg>
                 <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-square"/></svg>
               </div>
-              <div class="ef-shape" data-shape="browline">
-                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-brow"/></svg>
-                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-brow"/></svg>
+              <div class="ef-shape" data-shape="aviator">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-aviator"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-aviator"/></svg>
+              </div>
+              <div class="ef-shape" data-shape="titanium">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-thin"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-thin"/></svg>
               </div>
 
               <span class="ef-temple l"></span>
@@ -201,9 +226,9 @@
         <div class="frame-switch">
           <p class="fs-caption" aria-live="polite"></p>
           <div class="fs-row" role="group" aria-label="Preview frame shape">
-            <label class="fs" for="fs-round" >Round</label>
-            <label class="fs" for="fs-square">Square</label>
-            <label class="fs" for="fs-brow"  >Browline</label>
+            <label class="fs" for="fs-sun"     >Sunglasses</label>
+            <label class="fs" for="fs-aviator" >Aviator</label>
+            <label class="fs" for="fs-titanium">Titanium</label>
           </div>
         </div>
       </div>

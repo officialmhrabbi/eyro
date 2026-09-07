@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>orientation probe</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font:12px system-ui; }
+  #wrap { position:relative; width:1500px; height:1200px; }
+  canvas { position:absolute; inset:0; }
+  .lab { position:absolute; z-index:2; padding:2px 5px; background:#000a; font-size:11px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<div id="wrap"><canvas id="c"></canvas></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const FILES = {
+  sun:  'models/stylish_modern_high_quality_sunglasses.glb',
+  avi:  'models/aviator_glasses.glb',
+  tit:  'models/titanium_frame_glass.glb',
+};
+const R = Math.PI / 2;
+const ROTS = [
+  ['none',      [0, 0, 0]],
+  ['x -90',     [-R, 0, 0]],
+  ['x +90',     [R, 0, 0]],
+  ['x-90 y180', [-R, Math.PI, 0]],
+];
+
+const W = 1500, H = 1200, COLS = 4, ROWS = 3, CW = W / COLS, CH = H / ROWS;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(W, H, false);
+renderer.setScissorTest(true);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, CW / CH, 0.1, 100);
+camera.position.set(0, 0.6, 7.2);
+camera.lookAt(0, 0, 0);
+
+const loader = new GLTFLoader();
+const cells = [];
+
+function fit(root, rot) {
+  const g = new THREE.Group();
+  root.rotation.fromArray(rot);
+  g.add(root);
+  const box = new THREE.Box3().setFromObject(g);
+  const size = new THREE.Vector3(), mid = new THREE.Vector3();
+  box.getSize(size); box.getCenter(mid);
+  root.position.sub(mid);
+  g.scale.setScalar(4.6 / Math.max(size.x, 1e-4));
+  return g;
+}
+
+const wrap = document.getElementById('wrap');
+let row = 0;
+for (const [key, url] of Object.entries(FILES)) {
+  const gltf = await loader.loadAsync(url);
+  let col = 0;
+  for (const [name, rot] of ROTS) {
+    const scene = new THREE.Scene();
+    scene.environment = env;
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(3, 4, 5); scene.add(d);
+    scene.add(fit(gltf.scene.clone(true), rot));
+    cells.push({ scene, col, row });
+    const l = document.createElement('div');
+    l.className = 'lab';
+    l.style.left = (col * CW + 4) + 'px';
+    l.style.top = (row * CH + 4) + 'px';
+    l.textContent = key + ' / ' + name;
+    wrap.appendChild(l);
+    col++;
+  }
+  row++;
+}
+
+for (const { scene, col, row } of cells) {
+  const x = col * CW, y = H - (row + 1) * CH;
+  renderer.setViewport(x, y, CW, CH);
+  renderer.setScissor(x, y, CW, CH);
+  renderer.render(scene, camera);
+}
+document.title = 'probe-ready';
+</script>

@@ -704,11 +704,14 @@ async function initHero() {
     return out;
   }
 
-  /* Each shape is the flat cut of one rim, plus the numbers the bridge, end
-     pieces and hinges get placed from. holeHalfW is where the bridge has to
-     land so it meets the rim on solid material instead of over the lens. */
+  /* The flat cut of one rim, plus the numbers the bridge, end pieces and
+     hinges get placed from. holeHalfW is where the bridge has to land so it
+     meets the rim on solid material instead of over the lens.
+
+     Since models/ landed these are only the stand-in for a model that fails to
+     load, so each is keyed to the real frame it stands in for, not to a shape. */
   const SHAPES = {
-    round: () => {
+    aviator: () => {
       const outer = new THREE.Shape();
       outer.absarc(0, 0, 1.06, 0, Math.PI * 2, false);
       const hole = new THREE.Path();
@@ -719,7 +722,7 @@ async function initHero() {
       return { outer, lens, halfW: 1.06, holeHalfW: 0.88, hingeY: 0.26,
                bridge: { top: 0.52, side: -0.14, nose: 0.14 } };
     },
-    square: () => {
+    sun: () => {
       const outer = roundedRect(new THREE.Shape(), 2.14, 1.74, 0.34);
       const hole  = roundedRect(new THREE.Path(),  1.82, 1.42, 0.24);
       outer.holes.push(hole);
@@ -727,7 +730,7 @@ async function initHero() {
       return { outer, lens, halfW: 1.07, holeHalfW: 0.91, hingeY: 0.22,
                bridge: { top: 0.62, side: -0.08, nose: 0.14 } };
     },
-    browline: () => {
+    titanium: () => {
       // hole sits low, leaving a heavy brow; the bridge runs across at brow
       // height so the bar reads as one continuous piece, which is the shape
       const outer = roundedRect(new THREE.Shape(), 2.14, 1.7, 0.2);
@@ -842,7 +845,6 @@ async function initHero() {
     }
 
     g.rotation.x = -0.13;             // pantoscopic tilt
-    g.position.x = -0.5;
     g.userData.procedural = true;
     return g;
   }
@@ -863,7 +865,7 @@ async function initHero() {
   }
 
   const pivot = new THREE.Group();       // holds whichever frame is on show
-  let glasses = buildGlasses('round');
+  let glasses = buildGlasses('sun');
   pivot.add(glasses);
   const dust = buildDust();
   scene.add(pivot, dust);
@@ -886,9 +888,9 @@ async function initHero() {
      the model's own materials away for the acetate/glass above - usually worth
      trying, since marketplace models tend to ship with flat plastic shading. */
   const MODELS = {
-    round:    { url: 'models/round.glb',    rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
-    square:   { url: 'models/square.glb',   rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
-    browline: { url: 'models/browline.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    sun:      { url: 'models/stylish_modern_high_quality_sunglasses.glb', rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    aviator:  { url: 'models/aviator_glasses.glb',                        rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
+    titanium: { url: 'models/titanium_frame_glass.glb',                   rotation: [0, 0, 0], scale: 1, lift: [0, 0, 0], materials: 'model' },
   };
   const FRONT_SPAN = 4.6;   // the procedural front is about this wide, so a
                             // model auto-scaled to match drops straight in
@@ -899,13 +901,26 @@ async function initHero() {
 
   const matsOf = (m) => (Array.isArray(m) ? m : [m]);
 
-  // names are the only clue a gltf gives us about which part is which
+  /* Which mesh is the lens? A gltf only gives us names, and which name to read
+     differs per file. Sketchfab writes mesh names as "<object>_<material>_<n>";
+     a model that puts one material on everything (sunglasses does - its frame
+     sits on a material called "Glass") has to be read off the object name,
+     while a properly split model is far more reliable read off its materials. */
+  const LENS  = /lens|glass/;
+  const METAL = /hinge|screw|metal|steel|rivet|wire|nose.?piece|nosss/;
+
   function reskin(root) {
+    const names = new Set();
+    root.traverse((o) => { if (o.isMesh) matsOf(o.material).forEach((m) => names.add(m.name)); });
+    const byMaterial = names.size > 1;
     root.traverse((o) => {
       if (!o.isMesh) return;
-      const name = `${o.name} ${matsOf(o.material).map((m) => m.name).join(' ')}`.toLowerCase();
-      if (/lens|glass/.test(name)) o.material = lensMat;
-      else if (/hinge|screw|metal|steel|rivet|wire/.test(name)) o.material = steel;
+      const label = (byMaterial
+        ? matsOf(o.material).map((m) => m.name).join(' ')
+        : o.name.replace(/_[^_]*_\d+$/, '')        // drop the Sketchfab suffix
+      ).toLowerCase();
+      if (LENS.test(label)) o.material = lensMat;
+      else if (METAL.test(label)) o.material = steel;
       else o.material = acetate;
     });
   }
@@ -922,7 +937,7 @@ async function initHero() {
     box.getSize(size); box.getCenter(mid);
     root.position.sub(mid);                    // centre before scaling
     g.scale.setScalar((FRONT_SPAN / Math.max(size.x, 1e-4)) * cfg.scale);
-    g.position.set(-0.5 + cfg.lift[0], cfg.lift[1], cfg.lift[2]);
+    g.position.fromArray(cfg.lift);
     g.rotation.x = -0.13;                      // same pantoscopic tilt as the built frame
 
     if (cfg.materials === 'ours') reskin(g);
@@ -933,18 +948,23 @@ async function initHero() {
   }
 
   const loaded = new Map();      // kind -> group, or null once we know there is no file
+  const inflight = new Map();
   function loadFrame(kind) {
-    const cfg = MODELS[kind];
-    if (!cfg) return Promise.resolve(null);
-    return gltfLoader.loadAsync(cfg.url)
-      .then((gltf) => fitModel(gltf.scene, cfg))
-      .catch(() => null)         // no file yet, or a broken one: keep the built frame
-      .then((m) => { loaded.set(kind, m); return m; });
+    if (loaded.has(kind)) return Promise.resolve(loaded.get(kind));
+    if (!inflight.has(kind)) {
+      const cfg = MODELS[kind];
+      const p = (!cfg ? Promise.resolve(null) : gltfLoader.loadAsync(cfg.url)
+        .then((gltf) => fitModel(gltf.scene, cfg))
+        .catch(() => null))      // missing or broken: the built frame stands in
+        .then((m) => { loaded.set(kind, m); inflight.delete(kind); return m; });
+      inflight.set(kind, p);
+    }
+    return inflight.get(kind);
   }
 
   /* ---- frame switcher: the built frame holds the spot until a model lands ---- */
   let swapT = 1;          // 0..1, drives the scale punch on swap
-  let current = 'round';
+  let current = 'sun';
   let swapId = 0;
 
   function disposeGroup(group) {
@@ -961,29 +981,31 @@ async function initHero() {
     pivot.add(glasses);
   }
 
+  /* Hold whatever is already on screen until the new model arrives. Flashing
+     the procedural stand-in mid-swap reads as a glitch, and these files are big
+     enough that the flash would last long enough to notice. */
   async function setShape(kind) {
     if (kind === current || !SHAPES[kind]) return;
     current = kind;
     const mine = ++swapId;
-    if (loaded.has(kind)) { show(loaded.get(kind) || buildGlasses(kind)); return; }
-    show(buildGlasses(kind));                  // built frame first, so the swap is instant
     const model = await loadFrame(kind);
-    if (model && mine === swapId) show(model, false);
+    if (mine !== swapId) return;               // a newer choice landed first
+    show(model || buildGlasses(kind));
   }
 
-  // warm all three so later swaps never wait on the network
-  Object.keys(MODELS).forEach((k) => {
-    loadFrame(k).then((m) => { if (m && k === current && swapId === 0) show(m, false); });
-  });
+  // the three models are ~18MB between them, so only the one on show is fetched
+  // up front; the others come in on idle, or sooner if a chip is hovered
+  const warmAll = () => Object.keys(MODELS).forEach(loadFrame);
+  $('.fs').forEach((l) => l.addEventListener('pointerenter', warmAll, { once: true }));
 
   /* The radios are the single source of truth: CSS styles the chips, swaps the
      SVG frame and writes the caption; here we mirror the choice into WebGL. */
-  const RADIO_SHAPE = { 'fs-round': 'round', 'fs-square': 'square', 'fs-brow': 'browline' };
+  const RADIO_SHAPE = { 'fs-sun': 'sun', 'fs-aviator': 'aviator', 'fs-titanium': 'titanium' };
   $$('.fs-input').forEach((r) => r.addEventListener('change', () => {
     if (r.checked) setShape(RADIO_SHAPE[r.id]);
   }));
   const checked = $('.fs-input:checked');
-  if (checked && RADIO_SHAPE[checked.id] !== 'round') setShape(RADIO_SHAPE[checked.id]);
+  if (checked && RADIO_SHAPE[checked.id] !== current) setShape(RADIO_SHAPE[checked.id]);
 
   const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
   addEventListener('pointermove', (e) => {
@@ -996,6 +1018,9 @@ async function initHero() {
     camera.aspect = W / H; camera.updateProjectionMatrix();
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
+    // the copy owns the left half on a wide layout, so push the frame clear of
+    // it; once the layout narrows there is nothing to clear and it re-centres
+    pivot.position.x = W / H > 1.15 ? clamp((W / H) * 1.05, 1.2, 2.2) : 0;
   };
   addEventListener('resize', resize);
 
@@ -1027,7 +1052,7 @@ async function initHero() {
 
     camera.position.z = 8.6 + sp * 2.4;
     camera.position.x = ptr.x * 0.3;
-    camera.lookAt(-0.2, 0, 0);
+    camera.lookAt(0, 0, 0);
     dust.rotation.y = t * 0.02;
 
     composer.render();
@@ -1042,10 +1067,16 @@ async function initHero() {
   if (reduce) { introT = 1; swapT = 1; render(); }
   else loop();
 
-  // hand over from the CSS frame only once a real frame has been drawn
-  requestAnimationFrame(() => {
-    canvas.style.opacity = '1';
-    hero.classList.add('has-webgl');
+  // hand over from the CSS frame only once a real frame is in the scene, so the
+  // stand-in never gets to flash in front of the reader
+  loadFrame(current).then((model) => {
+    show(model, false);                        // null just leaves the built frame up
+    requestAnimationFrame(() => {
+      canvas.style.opacity = '1';
+      hero.classList.add('has-webgl');
+      if (window.requestIdleCallback) requestIdleCallback(warmAll, { timeout: 4000 });
+      else setTimeout(warmAll, 1500);
+    });
   });
 }
 
