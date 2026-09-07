@@ -1018,14 +1018,28 @@ async function initHero() {
     ptr.ty = (e.clientY / innerHeight) * 2 - 1;
   }, { passive: true });
 
+  // CSS drops the stage into its own short band below the copy under this
+  // width-or-aspect condition (see the hero rules in the matching media
+  // query in styles.css - keep the two in sync) - matched here so the frame
+  // re-centres in that band instead of following the side-by-side offset
+  // math, which assumes copy is beside it rather than above it.
+  const stackedHero = () => matchMedia('(max-width: 900px), (max-aspect-ratio: 4/5)').matches;
+  let camZ = 8.6;
+
   const resize = () => {
     W = stage.clientWidth; H = stage.clientHeight;
     camera.aspect = W / H; camera.updateProjectionMatrix();
     renderer.setSize(W, H, false);
     composer.setSize(W, H);
-    // the copy owns the left half on a wide layout, so push the frame clear of
-    // it; once the layout narrows there is nothing to clear and it re-centres
-    pivot.position.x = W / H > 1.15 ? clamp((W / H) * 0.95, 1.05, 1.9) : 0;
+    const stacked = stackedHero();
+    // the stacked band is short, so move the camera in a touch or the frame
+    // reads as small and distant inside it
+    camZ = stacked ? 7.2 : 8.6;
+    // the copy owns the left half of every non-stacked layout, so the frame
+    // always pushes clear of it there (never centres: a non-stacked layout
+    // this close to square would otherwise still land the frame on the text);
+    // once the layout stacks the copy runs full-width instead and it re-centres
+    pivot.position.x = stacked ? 0 : clamp((W / H) * 0.95, 1.05, 1.9);
 
     // keep the two softboxes raking across wherever the frame ended up
     const aim = pivot.position.x;
@@ -1060,7 +1074,7 @@ async function initHero() {
     pivot.position.z = -sp * 1.6;
     pivot.scale.setScalar(0.82 * (0.86 + 0.14 * intro) * (0.9 + 0.1 * swap));
 
-    camera.position.z = 8.6 + sp * 2.4;
+    camera.position.z = camZ + sp * 2.4;
     camera.position.x = ptr.x * 0.3;
     camera.lookAt(0, 0, 0);
     dust.rotation.y = t * 0.02;
