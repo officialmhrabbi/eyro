@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="EYRO is an eyewear shop in New York. Hand-finished frames, prescription lenses included, 30 day home trial." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>EYRO Eyewear, New York</title>
+
+  <!-- Arm the intro/curtain only when this page is served over http(s).
+       Opened as a file:// path the ES module below is blocked by the browser,
+       so we skip the curtain, render the page static, and flag it so the
+       notice at the end of <body> can explain why the 3D is missing. -->
+  <script>
+    document.documentElement.className +=
+      location.protocol === 'file:' ? ' is-file' : ' js';
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Three.js + addons from the jsdelivr CDN via import map. No build step. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- ===== Entry curtain ===== -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-inner">
+      <span class="loader-brand">EYRO</span>
+      <span class="loader-num">0</span>
+    </div>
+  </div>
+
+  <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+
+  <!-- Frame outlines, referenced by <use> in the hero. `.hl` paths are the
+       specular highlights and are hidden on the silhouette layer. -->
+  <svg class="svg-sprite" aria-hidden="true" width="0" height="0"><defs>
+    <g id="sh-round" fill="none" stroke="currentColor" stroke-width="19">
+      <circle cx="146" cy="104" r="76"/>
+      <circle cx="374" cy="104" r="76"/>
+      <path d="M222 94c16-16 38-23 52-23s36 7 52 23" stroke-width="13" stroke-linecap="round"/>
+      <rect x="52" y="80" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <rect x="448" y="80" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <g class="hl" stroke="#f4f4f2" fill="none" stroke-linecap="round">
+        <path d="M92 84a76 76 0 0 1 46-38" stroke-width="6"/>
+        <path d="M320 84a76 76 0 0 1 46-38" stroke-width="6"/>
+        <path d="M132 180a76 76 0 0 0 62-16" stroke-width="3" opacity=".3"/>
+        <path d="M360 180a76 76 0 0 0 62-16" stroke-width="3" opacity=".3"/>
+      </g>
+    </g>
+
+    <g id="sh-square" fill="none" stroke="currentColor" stroke-width="19">
+      <rect x="70" y="44" width="152" height="120" rx="36"/>
+      <rect x="298" y="44" width="152" height="120" rx="36"/>
+      <path d="M222 86c16-12 38-17 52-17s36 5 52 17" stroke-width="13" stroke-linecap="round"/>
+      <rect x="52" y="80" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <rect x="448" y="80" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <g class="hl" stroke="#f4f4f2" fill="none" stroke-linecap="round">
+        <path d="M80 102V82a38 38 0 0 1 38-38h40" stroke-width="6"/>
+        <path d="M308 102V82a38 38 0 0 1 38-38h40" stroke-width="6"/>
+        <path d="M118 162h56a38 38 0 0 0 34-22" stroke-width="3" opacity=".3"/>
+        <path d="M346 162h56a38 38 0 0 0 34-22" stroke-width="3" opacity=".3"/>
+      </g>
+    </g>
+
+    <g id="sh-brow" fill="none" stroke="currentColor">
+      <path d="M64 60h158M298 60h158" stroke-width="31" stroke-linecap="round"/>
+      <path d="M76 72c5 63 38 94 67 94s62-31 67-94" stroke-width="12"/>
+      <path d="M310 72c5 63 38 94 67 94s62-31 67-94" stroke-width="12"/>
+      <path d="M228 62h64" stroke-width="15" stroke-linecap="round"/>
+      <rect x="46" y="70" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <rect x="454" y="70" width="20" height="17" rx="6" fill="currentColor" stroke="none"/>
+      <g class="hl" stroke="#f4f4f2" fill="none" stroke-linecap="round">
+        <path d="M78 50h142" stroke-width="5" opacity=".55"/>
+        <path d="M312 50h142" stroke-width="5" opacity=".55"/>
+        <path d="M92 104c8 40 32 58 51 58" stroke-width="3" opacity=".32"/>
+        <path d="M326 104c8 40 32 58 51 58" stroke-width="3" opacity=".32"/>
+      </g>
+    </g>
+  </defs></svg>
+
+  <!-- ===== Announcement ===== -->
+  <div class="announce">
+    <div class="container announce-row">
+      <p>Prescription lenses included with every frame this month.</p>
+      <a href="#stores">Visit the shop <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header" id="top">
+    <div class="container nav">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true"></span>EYRO
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#trending">Frames</a>
+        <a href="#category">Sunglasses</a>
+        <a href="#showcase">Lenses</a>
+        <a href="#bestseller">Best sellers</a>
+        <a href="#stores">Stores</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Account">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M5 21c1.6-4 12-4 14 0"/></svg>
+        </button>
+        <button class="icon-btn cart" aria-label="Cart">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+          <span class="cart-count">2</span>
+        </button>
+        <button class="menu-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- Frame shape is held in radios so the switcher works with no JS at
+           all. CSS drives the SVG frame; script.js mirrors it into WebGL. -->
+      <input class="fs-input" type="radio" name="fshape" id="fs-round" checked>
+      <input class="fs-input" type="radio" name="fshape" id="fs-square">
+      <input class="fs-input" type="radio" name="fshape" id="fs-brow">
+
+      <div class="hero-stage" id="hero-stage" aria-hidden="true">
+        <canvas id="scene"></canvas>
+
+        <!-- CSS 3D frame. Real depth: the face and the silhouette sit on
+             different Z planes and the temples swing back into the scene,
+             so rotation gives genuine parallax. Runs without any script. -->
+        <div class="eyeframe">
+          <div class="ef-rig">
+            <div class="ef-body">
+              <span class="ef-glow"></span>
+
+              <div class="ef-shape" data-shape="round">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-round"/></svg>
+              </div>
+              <div class="ef-shape" data-shape="square">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-square"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-square"/></svg>
+              </div>
+              <div class="ef-shape" data-shape="browline">
+                <svg class="ef-back" viewBox="0 0 520 210"><use href="#sh-brow"/></svg>
+                <svg class="ef-face" viewBox="0 0 520 210"><use href="#sh-brow"/></svg>
+              </div>
+
+              <span class="ef-temple l"></span>
+              <span class="ef-temple r"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-fallback" aria-hidden="true"></div>
+      </div>
+
+      <div class="grain" aria-hidden="true"></div>
+
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow hero-eyebrow">
+            <span>EYRO Eyewear · New York · Since 2011</span>
+          </p>
+          <h1 id="hero-title" class="display">
+            <span class="line"><span class="w">Good</span> <span class="w">glasses</span></span>
+            <span class="line"><em class="w">disappear.</em></span>
+          </h1>
+          <p class="hero-lead" data-reveal="up">
+            We make frames in acetate and titanium, cut and finished by hand in our
+            Nolita workshop. Prescription lenses are included. Take five pairs home
+            and keep the one that fits.
+          </p>
+          <div class="hero-actions" data-reveal="up">
+            <a class="btn btn-solid" href="#trending" data-magnetic>Shop frames</a>
+            <a class="btn btn-line" href="#showcase" data-magnetic>Book an eye exam</a>
+          </div>
+          <ul class="hero-spec" data-reveal="up">
+            <li>Lenses included</li><li>30 day home trial</li><li>2 year warranty</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="hero-foot container">
+        <a class="scroll-cue" href="#category">
+          <span>Scroll</span><i aria-hidden="true"></i>
+        </a>
+
+        <div class="frame-switch">
+          <p class="fs-caption" aria-live="polite"></p>
+          <div class="fs-row" role="group" aria-label="Preview frame shape">
+            <label class="fs" for="fs-round" >Round</label>
+            <label class="fs" for="fs-square">Square</label>
+            <label class="fs" for="fs-brow"  >Browline</label>
+          </div>
+        </div>
+
+        <span class="hero-index"><b>01</b> / 06</span>
+      </div>
+    </section>
+
+    <!-- ===== Category marquee ===== -->
+    <section class="marquee" aria-label="Categories">
+      <div class="marquee-track">
+        <div class="marquee-group" aria-hidden="false">
+          <span>Optical</span><i>◆</i><span>Sunglasses</span><i>◆</i><span>Blue-light</span><i>◆</i>
+          <span>Reading</span><i>◆</i><span>Progressive</span><i>◆</i><span>Titanium</span><i>◆</i>
+          <span>Aviators</span><i>◆</i><span>Kids</span><i>◆</i>
+        </div>
+        <div class="marquee-group" aria-hidden="true">
+          <span>Optical</span><i>◆</i><span>Sunglasses</span><i>◆</i><span>Blue-light</span><i>◆</i>
+          <span>Reading</span><i>◆</i><span>Progressive</span><i>◆</i><span>Titanium</span><i>◆</i>
+          <span>Aviators</span><i>◆</i><span>Kids</span><i>◆</i>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Promo band ===== -->
+    <section class="promo" aria-labelledby="promo-title">
+      <div class="container promo-inner">
+        <p class="eyebrow" data-reveal="fade">This month at EYRO</p>
+        <h2 id="promo-title" class="display promo-title" data-reveal="up">
+          20%&nbsp;off
+          <span class="promo-bubble"><img src="https://images.unsplash.com/photo-1614715838608-dd527c46231d?w=200&h=200&q=70&fm=jpg&fit=crop" alt="" loading="lazy" onerror="this.closest('.promo-bubble').remove()"></span>
+          every&nbsp;frame,
+          <span class="promo-bubble"><img src="images/opticaljustin.jpg" alt="" loading="lazy" onerror="this.closest('.promo-bubble').remove()"></span>
+          lenses
+          <span class="promo-bubble"><img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=200&h=200&q=70&fm=jpg&fit=crop" alt="" loading="lazy" onerror="this.closest('.promo-bubble').remove()"></span>
+          on&nbsp;us
+        </h2>
+        <p class="promo-note" data-reveal="up">
+          Take 20% off any optical frame through the 31st. Single-vision prescription
+          lenses are included, with anti-glare and scratch coating as standard.
+          No code needed, the price updates at checkout.
+        </p>
+        <a class="promo-cta" href="#trending" data-reveal="up">Shop the frames <span aria-hidden="true">&rarr;</span></a>
+      </div>
+    </section>
+
+    <!-- ===== Shop by category ===== -->
+    <section class="section category" id="category" aria-labelledby="category-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="category-title" class="section-title" data-reveal="split">Shop by category</h2>
+          <a class="link-arrow" href="#trending" data-reveal="up">View all <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="cat-slider" data-reveal="up">
+          <div class="cat-viewport" id="cat-viewport">
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="a">
+                <img src="images/optical.png" alt="A spread of optical frames" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body">
+                <h3>Optical frames</h3><p>24 styles</p>
+                <a class="btn btn-line btn-sm" href="#trending">Shop now</a>
+              </div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="b">
+                <img src="images/types-of-sunglasses-hero.webp" alt="Sunglasses in tortoise, black and green" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Sunglasses</h3><p>Polarized and tinted</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="c">
+                <img src="images/bifocal-reading-glasses-B016-24.webp" alt="Grey progressive reading frame" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Reading &amp; progressive</h3><p>Cut to your prescription</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="d">
+                <img src="images/optical1.png" alt="Clear acetate frame with blue-light lenses" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Blue-light</h3><p>For screen-heavy days</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="e">
+                <img src="images/04-silver-pure-titanium-eyeglass-frames.jpg" alt="Silver pure titanium frame" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Titanium</h3><p>Featherweight, flexible</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="a">
+                <img src="images/kids.webp" alt="Blue kids frame" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Kids</h3><p>Ages 4 to 12</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="b">
+                <img src="images/sunglass.webp" alt="Black aviator sunglasses" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Aviators</h3><p>A modern classic</p></div>
+            </article>
+            <article class="cat-slide cat-card">
+              <div class="cat-media cat-media-product" data-duotone="c">
+                <img src="images/stainless_steel_sunglasses-430x430.jpg" alt="Rimless steel sunglasses" loading="lazy" onerror="this.remove()">
+              </div>
+              <div class="cat-body"><h3>Rimless steel</h3><p>Barely-there fit</p></div>
+            </article>
+          </div>
+
+          <div class="cat-slider-foot">
+            <div class="cat-dots" id="cat-dots" role="tablist" aria-label="Category pages"></div>
+            <div class="cat-nav">
+              <button class="cat-arrow" type="button" data-dir="-1" aria-label="Previous categories">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 5-7 7 7 7"/></svg>
+              </button>
+              <button class="cat-arrow" type="button" data-dir="1" aria-label="Next categories">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Trending ===== -->
+    <section class="section trending" id="trending" aria-labelledby="trending-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="trending-title" class="section-title" data-reveal="split">Trending products</h2>
+          <div class="tabs" role="tablist" aria-label="Filter products" data-reveal="up">
+            <button class="tab is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+            <button class="tab" data-filter="new" role="tab" aria-selected="false">New</button>
+            <button class="tab" data-filter="top" role="tab" aria-selected="false">Top rated</button>
+          </div>
+        </div>
+        <div class="product-grid" id="trending-grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== Statement ===== -->
+    <section class="section statement" aria-label="Statement">
+      <div class="container">
+        <p class="statement-text" id="statement">
+          A good frame disappears by the time you finish your coffee. That is the
+          only measurement we actually care about.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== Product showcase ===== -->
+    <section class="section showcase" id="showcase" aria-labelledby="showcase-title">
+      <div class="container showcase-inner">
+        <div class="showcase-media" data-reveal="clip">
+          <div class="showcase-glass" aria-hidden="true"></div>
+          <img class="showcase-img" alt="The Bowery browline frame, three-quarter view"
+               src="https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=1200&h=900&q=80&fm=jpg&fit=crop"
+               data-parallax="-0.14" loading="lazy" onerror="this.remove()">
+          <span class="showcase-tag">everyday wear</span>
+        </div>
+        <div class="showcase-copy">
+          <h2 id="showcase-title" class="section-title" data-reveal="split">The Bowery</h2>
+          <p data-reveal="up">
+            A browline frame cut from a single block of black acetate with a brushed
+            steel brow bar. It weighs 24 grams and sits level on a wide bridge, which
+            is why half our regulars own a pair.
+          </p>
+          <dl class="spec-list" data-reveal="up">
+            <div><dt>Material</dt><dd>Italian acetate, steel</dd></div>
+            <div><dt>Lens width</dt><dd>52 mm</dd></div>
+            <div><dt>Weight</dt><dd>24 g</dd></div>
+          </dl>
+          <a class="btn btn-solid" href="#bestseller" data-magnetic>See the range</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Best sellers ===== -->
+    <section class="section bestseller" id="bestseller" aria-labelledby="bestseller-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="bestseller-title" class="section-title" data-reveal="split">Best sellers</h2>
+          <a class="link-arrow" href="#trending" data-reveal="up">Shop all <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="product-grid product-grid-4" id="bestseller-grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== Category cards / offers ===== -->
+    <section class="section offers" id="stores" aria-label="Store offers">
+      <div class="container">
+        <h2 class="section-title" data-reveal="split">On sale this month</h2>
+        <div class="offer-strip">
+          <article class="offer offer-product" data-reveal="up"><img src="images/opticaljustin.jpg" alt="Titanium optical frame" loading="lazy" onerror="this.remove()"><span>Optical</span><strong>50% off</strong><a href="#trending">Shop now</a></article>
+          <article class="offer offer-product" data-reveal="up"><img src="images/sunglass.webp" alt="Black aviator sunglasses" loading="lazy" onerror="this.remove()"><span>Sunglasses</span><strong>35% off</strong><a href="#trending">Shop now</a></article>
+          <article class="offer offer-product" data-reveal="up"><img src="images/stainless_steel_sunglasses-430x430.jpg" alt="Rimless steel sunglasses" loading="lazy" onerror="this.remove()"><span>New arrivals</span><strong>Just in</strong><a href="#trending">Shop now</a></article>
+          <article class="offer offer-product" data-reveal="up"><img src="images/04-silver-pure-titanium-eyeglass-frames.jpg" alt="Silver pure titanium frame" loading="lazy" onerror="this.remove()"><span>Titanium</span><strong>30% off</strong><a href="#trending">Shop now</a></article>
+          <article class="offer offer-product" data-reveal="up"><img src="images/kids.webp" alt="Blue kids frame" loading="lazy" onerror="this.remove()"><span>Kids</span><strong>20% off</strong><a href="#trending">Shop now</a></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-lead">
+          <p class="eyebrow eyebrow-light">Get in touch</p>
+          <a class="footer-mail" href="mailto:hello@eyro.example">hello@eyro.example</a>
+          <p class="footer-addr">
+            42 Prince Street, New York, NY 10012<br />
+            Open Tuesday to Sunday, 11 to 7 &nbsp;·&nbsp; (212) 555 0180
+          </p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div><h3>Shop</h3><a href="#trending">Optical</a><a href="#category">Sunglasses</a><a href="#showcase">Lenses</a><a href="#bestseller">Best sellers</a></div>
+          <div><h3>Help</h3><a href="#stores">Visit the shop</a><a href="#showcase">Book an eye exam</a><a href="#top">Returns</a><a href="#top">Warranty</a></div>
+          <div><h3>Company</h3><a href="#top">About</a><a href="#top">Journal</a><a href="#top">Stockists</a><a href="#top">Contact</a></div>
+        </nav>
+      </div>
+    </div>
+    <div class="wordmark" aria-hidden="true">EYRO</div>
+    <div class="container footer-legal">
+      <p>© <span id="year"></span> EYRO Eyewear. All rights reserved.</p>
+      <p>Privacy · Terms</p>
+    </div>
+  </footer>
+
+  <!-- Shown only when the page is opened from disk, where the browser refuses
+       to load the ES module below (so there is no 3D and no motion). -->
+  <aside class="file-note" role="note">
+    <p>
+      <strong>Opened from a file, so you are seeing the CSS build of the hero.</strong>
+      Browsers block ES modules on <code>file://</code>, which is where the WebGL frame and the
+      scroll animations live. Run <code>node serve.mjs</code> here, then open
+      <code>http://localhost:5173</code>.
+    </p>
+  </aside>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
