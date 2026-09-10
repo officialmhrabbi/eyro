@@ -143,13 +143,14 @@ function initHeader() {
 
   const update = () => {
     ticking = false;
-    const y = scrollY;
+    const y = Math.max(0, scrollY);           // clamp iOS rubber-band (negative scrollY)
     h.classList.toggle('is-stuck', y > 8);
-    if (!h.classList.contains('nav-open')) {
-      const goingDown = y > last && y > 320;
-      h.classList.toggle('is-hidden', goingDown && !reduce);
-    }
+
+    const dy = y - last;
+    if (Math.abs(dy) < 6) return;             // ignore momentum / sub-pixel jitter -> no shake
     last = y;
+    if (h.classList.contains('nav-open')) return;
+    h.classList.toggle('is-hidden', dy > 0 && y > 320 && !reduce);
   };
   update();
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
@@ -167,7 +168,7 @@ function initHeader() {
 }
 
 function initChromeHeight() {
-  const parts = [$('.announce'), $('.site-header')].filter(Boolean);
+  const parts = [$('.site-header')].filter(Boolean);
   if (!parts.length) return;
   const set = () => {
     const h = parts.reduce((n, el) => n + el.offsetHeight, 0);
@@ -264,7 +265,7 @@ function initMarquee() {
   marquee.addEventListener('pointerenter', () => { paused = true; });
   marquee.addEventListener('pointerleave', () => { paused = false; });
   addEventListener('scroll', () => {
-    boost = Math.min(520, boost + Math.abs(scrollY - lastScroll) * 5);
+    boost = Math.min(300, boost + Math.abs(scrollY - lastScroll) * 3);
     lastScroll = scrollY;
   }, { passive: true });
   addEventListener('resize', () => { unit = seed.offsetWidth; });
